@@ -1,0 +1,1365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lamla · UI preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet" />
+<style>
+  /* =========================================================
+     Tokens — mirror /app/src/main/java/app/lamla/ui/theme
+     ========================================================= */
+  :root {
+    /* Light palette */
+    --ivory:    #FAFAF7;
+    --bone:     #F3F2EE;
+    --linen:    #EAE8E1;
+    --stone:    #D7D4CB;
+    --slate:    #8E8B84;
+    --graphite: #4A4843;
+    --ink:      #1A1A1A;
+    /* Dark palette */
+    --obsidian: #0B0B0E;
+    --charcoal: #131318;
+    --onyx:     #1B1B22;
+    --iron:     #2A2A33;
+    --ash:      #7E7E89;
+    --mist:     #C9C9D2;
+    --snow:     #F2F2F4;
+    /* Accent */
+    --gold:      #C5A35A;
+    --gold-deep: #A4863F;
+    --gold-soft: #E3D4A8;
+    --gold-ghost:#3A3220;
+    /* Stress bands */
+    --sage:      #5C8064; --sage-dark:  #7BAA85;
+    --amber:     #B58532; --amber-dark: #D9A95A;
+    --rust:      #B05A47; --rust-dark:  #CE7A65;
+    /* Course palette */
+    --c-teal:     #4A8071;
+    --c-rust:     #B85C5C;
+    --c-blue:     #4F7396;
+    --c-ochre:    #C07F3D;
+    --c-plum:     #8E5DA0;
+    --c-moss:     #6E8B47;
+  }
+
+  /* Light mode (default) */
+  body {
+    --bg:                var(--ivory);
+    --surface:           var(--ivory);
+    --surface-low:       #F7F6F1;
+    --surface-container: var(--bone);
+    --surface-high:      #EEEDE7;
+    --on-surface:        var(--ink);
+    --on-surface-var:    var(--graphite);
+    --muted:             var(--slate);
+    --hairline:          #E5E2DA;
+    --hairline-strong:   var(--stone);
+    --rail:              var(--linen);
+    --primary-fg:        var(--ivory);
+    --primary-bg:        var(--ink);
+    --accent:            var(--gold);
+    --stress-chill:      var(--sage);
+    --stress-steady:     var(--amber);
+    --stress-heavy:      #C2774C;
+    --stress-crunch:     var(--rust);
+    --scrim:             rgba(0,0,0,0.4);
+    color-scheme: light;
+  }
+  /* Dark mode */
+  body[data-theme="dark"] {
+    --bg:                var(--obsidian);
+    --surface:           var(--obsidian);
+    --surface-low:       #0F0F14;
+    --surface-container: var(--charcoal);
+    --surface-high:      #17171D;
+    --on-surface:        var(--snow);
+    --on-surface-var:    var(--mist);
+    --muted:             var(--ash);
+    --hairline:          #22222B;
+    --hairline-strong:   var(--iron);
+    --rail:              var(--onyx);
+    --primary-fg:        var(--obsidian);
+    --primary-bg:        var(--snow);
+    --accent:            var(--gold);
+    --stress-chill:      var(--sage-dark);
+    --stress-steady:     var(--amber-dark);
+    --stress-heavy:      #E19770;
+    --stress-crunch:     var(--rust-dark);
+    --scrim:             rgba(0,0,0,0.65);
+    color-scheme: dark;
+  }
+
+  /* =========================================================
+     Page chrome
+     ========================================================= */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-feature-settings: "tnum" 1, "lnum" 1, "case" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #2F2F36;
+    color: var(--on-surface);
+    min-height: 100vh;
+    transition: background-color 400ms cubic-bezier(.2,0,0,1);
+  }
+  body { background: linear-gradient(180deg, #25252B 0%, #1A1A20 100%); }
+  body[data-theme="dark"] { background: linear-gradient(180deg, #07070A 0%, #000 100%); }
+
+  .page-header {
+    padding: 28px 48px 4px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+    color: rgba(255,255,255,0.95);
+  }
+  .page-header h1 {
+    font-size: 22px; font-weight: 500; letter-spacing: -0.01em;
+  }
+  .page-header .meta {
+    font-size: 12px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: rgba(255,255,255,0.5);
+  }
+
+  .theme-toggle {
+    display: inline-flex; align-items: center; padding: 4px; gap: 2px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 999px;
+  }
+  .theme-toggle button {
+    appearance: none; border: 0; cursor: pointer;
+    background: transparent; color: rgba(255,255,255,0.6);
+    padding: 8px 16px; border-radius: 999px;
+    font: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 250ms cubic-bezier(.2,0,0,1);
+  }
+  .theme-toggle button.active {
+    background: rgba(255,255,255,0.95); color: #15151A;
+  }
+
+  .page-subtitle {
+    padding: 0 48px 20px;
+    color: rgba(255,255,255,0.45);
+    font-size: 14px; line-height: 1.5; max-width: 720px;
+  }
+
+  /* Phone grid */
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 36px; padding: 8px 48px 64px;
+    max-width: 1680px; margin: 0 auto;
+  }
+  @media (max-width: 1100px) {
+    .phones { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; padding: 8px 24px 48px; }
+    .page-header, .page-subtitle { padding-left: 24px; padding-right: 24px; }
+  }
+
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .phone-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: rgba(255,255,255,0.4);
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 390px; height: 844px; max-width: 100%;
+    border-radius: 48px;
+    background: var(--bg);
+    overflow: hidden; position: relative;
+    box-shadow:
+      0 0 0 10px #0F0F12,
+      0 0 0 11px rgba(255,255,255,0.04),
+      0 30px 60px -20px rgba(0,0,0,0.55),
+      0 10px 30px -10px rgba(0,0,0,0.4);
+    transition: background-color 400ms cubic-bezier(.2,0,0,1), box-shadow 400ms cubic-bezier(.2,0,0,1);
+  }
+  .phone::before {
+    /* Notch */
+    content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 28px; background: #0A0A0E; border-radius: 999px; z-index: 100;
+  }
+
+  /* Inside phone */
+  .screen {
+    width: 100%; height: 100%;
+    background: var(--bg); color: var(--on-surface);
+    overflow: hidden; position: relative;
+    transition: background-color 400ms cubic-bezier(.2,0,0,1), color 400ms cubic-bezier(.2,0,0,1);
+    display: flex; flex-direction: column;
+  }
+  .status-bar {
+    height: 56px; flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 6px;
+    font-size: 14px; font-weight: 500; color: var(--on-surface);
+  }
+  .status-bar .icons {
+    display: inline-flex; gap: 5px; align-items: center;
+    color: var(--on-surface); opacity: 0.85;
+  }
+  .status-bar .icons .sym { font-family: 'Material Symbols Outlined'; font-size: 14px; }
+
+  .content {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 0 20px 120px;
+  }
+  .content::-webkit-scrollbar { width: 0; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 18px; left: 20px; right: 20px;
+    display: flex; padding: 8px;
+    background: var(--surface-low);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px -12px rgba(0,0,0,0.15);
+    transition: background-color 400ms cubic-bezier(.2,0,0,1), border-color 400ms cubic-bezier(.2,0,0,1);
+  }
+  .bottom-nav .tab {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 12px; border-radius: 999px;
+    color: var(--on-surface-var);
+    font-size: 12px; font-weight: 500; letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 280ms cubic-bezier(.2,0,0,1);
+  }
+  .bottom-nav .tab .sym {
+    font-family: 'Material Symbols Outlined'; font-size: 20px;
+    transition: color 280ms;
+  }
+  .bottom-nav .tab.active {
+    background: var(--on-surface); color: var(--primary-fg);
+  }
+  .bottom-nav .tab:not(.active) .label { display: none; }
+
+  /* =========================================================
+     Reusable design system primitives
+     ========================================================= */
+  .section-label {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--on-surface-var);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0;
+  }
+  .section-label .count {
+    color: var(--muted); font-weight: 500;
+  }
+
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 14px; padding: 16px;
+    transition: background-color 400ms cubic-bezier(.2,0,0,1), border-color 400ms cubic-bezier(.2,0,0,1);
+  }
+  .surface.lg { padding: 24px; border-radius: 20px; }
+  .surface.tap { cursor: pointer; transition: transform 200ms cubic-bezier(.2,0,0,1), background-color 200ms; }
+  .surface.tap:active { transform: scale(0.985); background: var(--surface-high); }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--hairline);
+    background: var(--surface-container);
+    color: var(--on-surface-var);
+    font-size: 12px; font-weight: 500; letter-spacing: 0.02em;
+    transition: all 200ms;
+  }
+  .chip.tag { padding: 5px 10px 5px 8px; }
+  .chip .dot {
+    width: 7px; height: 7px; border-radius: 999px; background: currentColor;
+  }
+  .chip.has-color { border-color: transparent; }
+
+  .badge-pill {
+    display: inline-flex; align-items: center; padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hairline { height: 1px; background: var(--hairline); border: 0; margin: 0; transition: background-color 400ms; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; letter-spacing: 0.01em;
+    cursor: pointer; border: 0; font-family: inherit;
+    transition: transform 150ms cubic-bezier(.2,0,0,1), background-color 200ms;
+    user-select: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn.primary { background: var(--on-surface); color: var(--primary-fg); }
+  .btn.secondary {
+    background: var(--surface-container); color: var(--on-surface);
+    border: 1px solid var(--hairline);
+  }
+  .btn.ghost { background: transparent; color: var(--on-surface); }
+  .btn .sym { font-family: 'Material Symbols Outlined'; font-size: 18px; }
+
+  .fab {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--on-surface); color: var(--primary-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 150ms cubic-bezier(.2,0,0,1);
+    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.25);
+  }
+  .fab:active { transform: scale(0.94); }
+  .fab .sym { font-family: 'Material Symbols Outlined'; font-size: 22px; }
+
+  /* =========================================================
+     Home screen — Today
+     ========================================================= */
+  .home-greeting {
+    margin: 16px 0 24px;
+  }
+  .home-greeting .dateline {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--on-surface-var);
+    margin-bottom: 4px;
+  }
+  .home-greeting h1 {
+    font-size: 34px; font-weight: 300; letter-spacing: -0.015em;
+    line-height: 1.18;
+  }
+
+  .stress-card {
+    padding: 22px 24px; border-radius: 20px;
+    background: var(--surface-low); border: 1px solid var(--hairline);
+    display: flex; flex-direction: column; gap: 14px;
+    transition: background-color 400ms, border-color 400ms, transform 200ms;
+    cursor: pointer;
+  }
+  .stress-card:active { transform: scale(0.99); }
+  .stress-card .head { display: flex; align-items: flex-end; justify-content: space-between; }
+  .stress-card .label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--on-surface-var); margin-bottom: 4px; }
+  .stress-card .number {
+    font-size: 56px; font-weight: 300; letter-spacing: -0.02em;
+    line-height: 1; font-feature-settings: "tnum" 1;
+  }
+  .stress-card .denom {
+    font-size: 17px; font-weight: 500; color: var(--muted);
+    margin-left: 4px; vertical-align: 7px;
+  }
+  .stress-card .band {
+    padding: 5px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+    background: color-mix(in srgb, var(--stress-heavy) 12%, transparent);
+    color: var(--stress-heavy);
+  }
+  .stress-bar {
+    height: 6px; border-radius: 999px; background: var(--rail); position: relative;
+    overflow: hidden;
+  }
+  .stress-bar .fill {
+    height: 100%; border-radius: 999px;
+    background: var(--stress-heavy);
+    transition: width 800ms cubic-bezier(.2,0,0,1);
+  }
+  .stress-bar .tick {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: color-mix(in srgb, var(--rail) 50%, transparent);
+  }
+
+  /* Today timeline */
+  .flow { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
+  .flow-row { display: flex; gap: 12px; align-items: stretch; padding-bottom: 12px; }
+  .flow-row .time-col {
+    width: 56px; text-align: right; padding-top: 14px;
+    font-size: 13px; font-weight: 500; font-feature-settings: "tnum" 1;
+    color: var(--on-surface);
+  }
+  .flow-row .time-col .end {
+    font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px;
+  }
+  .flow-row .rail-col {
+    width: 14px; display: flex; flex-direction: column; align-items: center;
+  }
+  .flow-row .rail {
+    width: 1px; background: var(--rail); flex: 1 1 auto;
+    transition: background-color 400ms;
+  }
+  .flow-row .rail.top { height: 14px; flex: 0 0 14px; }
+  .flow-row .rail.bottom { flex: 1 1 auto; min-height: 10px; }
+  .flow-row .indicator {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent);
+    margin: 4px 0;
+  }
+  .flow-row .indicator.square {
+    border-radius: 2px;
+    background: transparent;
+    border: 1.5px solid currentColor;
+  }
+  .flow-row .indicator.study {
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--c-teal) 25%, transparent);
+    border: 1px solid var(--c-teal);
+  }
+  .flow-row .indicator.now {
+    background: var(--on-surface);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--on-surface) 12%, transparent);
+  }
+  .flow-row .content-col { flex: 1 1 auto; }
+
+  .flow-card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 14px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: all 300ms cubic-bezier(.2,0,0,1);
+  }
+  .flow-card.live {
+    background: var(--surface-low);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--hairline));
+  }
+  .flow-card .top-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .flow-card .title {
+    font-size: 15px; font-weight: 500; color: var(--on-surface);
+  }
+  .flow-card .meta {
+    font-size: 13px; color: var(--on-surface-var);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .flow-card .meta .sym { font-family: 'Material Symbols Outlined'; font-size: 13px; }
+
+  .live-pill {
+    padding: 3px 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  }
+  .past { opacity: 0.45; }
+
+  /* Quick capture FAB */
+  .capture-fab {
+    position: absolute; right: 20px; bottom: 96px;
+    z-index: 5;
+  }
+
+  /* =========================================================
+     Timetable screen
+     ========================================================= */
+  .day-tabs {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 12px 0 8px;
+    scrollbar-width: none;
+  }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .day-tab {
+    flex-shrink: 0;
+    padding: 8px 14px; border-radius: 999px;
+    border: 1px solid var(--hairline);
+    color: var(--on-surface-var);
+    font-size: 12px; font-weight: 500; letter-spacing: 0.05em;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: transparent;
+    transition: all 200ms;
+    cursor: pointer;
+  }
+  .day-tab.active {
+    background: var(--on-surface); color: var(--primary-fg);
+    border-color: transparent;
+  }
+  .day-tab .today-dot {
+    width: 5px; height: 5px; border-radius: 999px; background: var(--on-surface);
+  }
+  .day-tab.active .today-dot { display: none; }
+
+  .timetable-row {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 14px; padding: 16px;
+    display: flex; gap: 14px; align-items: center;
+    margin-bottom: 12px;
+  }
+  .timetable-row .time-col {
+    width: 56px;
+    font-size: 13px; font-weight: 500; font-feature-settings: "tnum" 1;
+  }
+  .timetable-row .time-col .end {
+    font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400;
+  }
+  .accent-rail {
+    width: 3px; height: 48px; border-radius: 2px;
+  }
+  .timetable-row .body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+  /* =========================================================
+     Pomodoro screen
+     ========================================================= */
+  .pomo-screen { padding: 0 24px; flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .pomo-topbar {
+    padding: 8px 0 24px; width: 100%; display: flex; justify-content: center;
+    color: var(--on-surface); font-size: 15px; font-weight: 500;
+  }
+  .pomo-ring {
+    width: 280px; height: 280px; margin-top: auto;
+    position: relative;
+  }
+  .pomo-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .pomo-ring circle { fill: none; stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .pomo-ring .rail { stroke: var(--rail); }
+  .pomo-ring .progress { stroke: var(--on-surface); }
+  .pomo-ring .progress.break { stroke: color-mix(in srgb, var(--on-surface) 50%, transparent); }
+  .pomo-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px;
+  }
+  .pomo-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 64px; font-weight: 300; letter-spacing: -0.015em; line-height: 1;
+    font-feature-settings: "tnum" 1;
+  }
+  .pomo-phase {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--on-surface-var);
+  }
+  .pomo-pips {
+    display: flex; gap: 10px; margin: 24px 0 auto;
+  }
+  .pomo-pips .pip {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--hairline-strong);
+  }
+  .pomo-pips .pip.on { background: var(--on-surface); }
+  .pomo-controls {
+    display: flex; gap: 12px; width: 100%; padding: 24px 0;
+  }
+  .pomo-controls .btn { flex: 1; }
+  .pomo-controls .btn.primary { flex: 2; padding: 14px 16px; }
+
+  /* =========================================================
+     Deadlines screen
+     ========================================================= */
+  .topbar {
+    display: flex; align-items: center; padding: 8px 0 20px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 16px;
+    transition: border-color 400ms;
+  }
+  .topbar .back-btn {
+    width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+    color: var(--on-surface); cursor: pointer;
+  }
+  .topbar .title { flex: 1; text-align: center; font-size: 15px; font-weight: 500; }
+  .topbar .spacer { width: 36px; }
+  .topbar .sym { font-family: 'Material Symbols Outlined'; font-size: 22px; }
+
+  .deadline-row {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 14px; padding: 16px;
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 12px;
+  }
+  .check {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1.5px solid var(--hairline-strong);
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 200ms;
+  }
+  .check.done {
+    background: color-mix(in srgb, var(--c-rust) 18%, transparent);
+    border-color: var(--c-rust);
+  }
+  .check.done .sym { font-family: 'Material Symbols Outlined'; font-size: 16px; color: var(--c-rust); }
+  .deadline-row .body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .deadline-row .body .title {
+    font-size: 15px; font-weight: 500; color: var(--on-surface);
+  }
+  .deadline-row .body .meta {
+    font-size: 13px; color: var(--on-surface-var);
+  }
+  .deadline-row .body.done .title { color: var(--on-surface-var); text-decoration: line-through; text-decoration-color: var(--muted); }
+
+  .due-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--stress-crunch);
+  }
+
+  /* =========================================================
+     Stress breakdown sheet
+     ========================================================= */
+  .sheet-screen .content { padding-bottom: 0; }
+  .scrim {
+    position: absolute; inset: 0; background: var(--scrim);
+    z-index: 10;
+    transition: background-color 400ms;
+  }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-top-left-radius: 28px; border-top-right-radius: 28px;
+    padding: 20px 20px 32px;
+    z-index: 11;
+    height: 75%; overflow-y: auto;
+    transition: background-color 400ms;
+  }
+  .sheet::-webkit-scrollbar { width: 0; }
+  .sheet-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: var(--hairline-strong); margin: 4px auto 14px;
+  }
+  .sheet h2 {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--on-surface-var); margin-bottom: 4px;
+  }
+  .sheet .big-num {
+    font-size: 44px; font-weight: 300; letter-spacing: -0.018em; line-height: 1;
+    margin-bottom: 20px;
+  }
+  .sheet .big-num .denom { font-size: 15px; color: var(--muted); margin-left: 4px; vertical-align: 6px; font-weight: 500; }
+  .contrib-row {
+    display: flex; align-items: center; padding: 14px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .contrib-row .body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .contrib-row .points-col { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 60px; }
+  .contrib-row .points { font-size: 13px; font-weight: 500; font-feature-settings: "tnum" 1; }
+  .contrib-row .bar { width: 54px; height: 4px; border-radius: 2px; background: var(--rail); overflow: hidden; }
+  .contrib-row .bar .fill { height: 100%; }
+
+  /* =========================================================
+     Animations
+     ========================================================= */
+  @keyframes pulse-soft {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--on-surface) 14%, transparent); }
+    50%     { box-shadow: 0 0 0 6px color-mix(in srgb, var(--on-surface) 8%, transparent); }
+  }
+  .indicator.now { animation: pulse-soft 2.4s ease-in-out infinite; }
+
+  @keyframes pomo-tick {
+    from { stroke-dashoffset: 0; }
+    to   { stroke-dashoffset: -100; }
+  }
+
+  /* Notes line at the bottom of the page */
+  .notes {
+    padding: 16px 48px 64px;
+    color: rgba(255,255,255,0.4);
+    font-size: 12px; line-height: 1.6;
+    max-width: 920px; margin: 0 auto;
+  }
+  .notes code {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: rgba(255,255,255,0.7);
+  }
+</style>
+</head>
+<body data-theme="light">
+
+<header class="page-header">
+  <div>
+    <div class="meta">LAMLA · STUDENT COMMAND CENTER</div>
+    <h1>UI preview</h1>
+  </div>
+  <div class="theme-toggle" role="tablist" aria-label="Theme">
+    <button class="active" data-set="light">Light</button>
+    <button data-set="dark">Dark</button>
+    <button data-set="auto">Auto</button>
+  </div>
+</header>
+<p class="page-subtitle">
+  Five screens rendered with the exact tokens from <code style="font-family:'JetBrains Mono';">ui/theme/Color.kt</code>,
+  <code style="font-family:'JetBrains Mono';">Type.kt</code>, <code style="font-family:'JetBrains Mono';">Spacing.kt</code>.
+  Toggle theme above — every screen transitions in lockstep. Tap the cards, the deadline checkboxes, and the bottom nav.
+</p>
+
+<section class="phones">
+
+  <!-- ========================================================
+       1. Home (Today)
+       ======================================================== -->
+  <div class="phone-wrap">
+    <span class="phone-label">Home · Today</span>
+    <div class="phone"><div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="icons">
+          <span class="sym">network_cell</span>
+          <span class="sym">wifi</span>
+          <span class="sym">battery_full</span>
+        </span>
+      </div>
+
+      <div class="content">
+        <div class="home-greeting">
+          <div class="dateline">MONDAY · 26 MAY</div>
+          <h1>Good morning, Karlson</h1>
+        </div>
+
+        <!-- Stress score -->
+        <div class="stress-card" onclick="document.querySelector('[data-screen=\'sheet\']').scrollIntoView({behavior:'smooth'})">
+          <div class="head">
+            <div>
+              <div class="label">TODAY'S LOAD</div>
+              <span class="number">62</span><span class="denom">/100</span>
+            </div>
+            <span class="band">Heavy</span>
+          </div>
+          <div class="stress-bar">
+            <div class="fill" style="width: 62%"></div>
+            <span class="tick" style="left: 25%"></span>
+            <span class="tick" style="left: 50%"></span>
+            <span class="tick" style="left: 75%"></span>
+          </div>
+        </div>
+
+        <!-- Today's flow -->
+        <div class="section-label" style="margin: 24px 0 8px">
+          <span>Today's flow</span>
+          <span class="count">5 items</span>
+        </div>
+
+        <div class="flow">
+          <!-- Past class -->
+          <div class="flow-row past">
+            <div class="time-col">08:00<div class="end">09:30</div></div>
+            <div class="rail-col">
+              <div class="rail top"></div>
+              <div class="indicator" style="background: var(--c-blue);"></div>
+              <div class="rail bottom"></div>
+            </div>
+            <div class="content-col">
+              <div class="flow-card">
+                <div class="top-row">
+                  <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-blue) 10%, transparent); color: var(--c-blue); border-color: color-mix(in srgb, var(--c-blue) 20%, transparent);">
+                    <span class="dot" style="background: var(--c-blue)"></span>COE271
+                  </span>
+                </div>
+                <div class="title">Computer Networking</div>
+                <div class="meta"><span class="sym">place</span>Petroleum Bldg, PB 105</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live class -->
+          <div class="flow-row">
+            <div class="time-col" style="color: var(--on-surface); font-weight: 600;">10:00<div class="end">11:30</div></div>
+            <div class="rail-col">
+              <div class="rail top"></div>
+              <div class="indicator now"></div>
+              <div class="rail bottom"></div>
+            </div>
+            <div class="content-col">
+              <div class="flow-card live">
+                <div class="top-row">
+                  <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-rust) 10%, transparent); color: var(--c-rust); border-color: color-mix(in srgb, var(--c-rust) 20%, transparent);">
+                    <span class="dot" style="background: var(--c-rust)"></span>MEC241
+                  </span>
+                  <span class="live-pill" style="background: color-mix(in srgb, var(--c-rust) 14%, transparent); color: var(--c-rust);">LIVE</span>
+                </div>
+                <div class="title">Engineering Thermodynamics</div>
+                <div class="meta"><span class="sym">place</span>MEE Lecture Theatre 2</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deadline -->
+          <div class="flow-row">
+            <div class="time-col">13:00</div>
+            <div class="rail-col">
+              <div class="rail top"></div>
+              <div class="indicator square" style="color: var(--c-rust)"></div>
+              <div class="rail bottom"></div>
+            </div>
+            <div class="content-col">
+              <div class="flow-card">
+                <div class="top-row">
+                  <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-rust) 10%, transparent); color: var(--c-rust); border-color: color-mix(in srgb, var(--c-rust) 20%, transparent);">
+                    <span class="dot" style="background: var(--c-rust)"></span>MEC241
+                  </span>
+                  <span class="due-label">DUE</span>
+                </div>
+                <div class="title">Lab Assignment 3</div>
+                <div class="meta">30% of grade</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Study block -->
+          <div class="flow-row">
+            <div class="time-col">15:30<div class="end">17:00</div></div>
+            <div class="rail-col">
+              <div class="rail top"></div>
+              <div class="indicator study"></div>
+              <div class="rail bottom"></div>
+            </div>
+            <div class="content-col">
+              <div class="flow-card">
+                <div class="top-row">
+                  <span class="section-label" style="padding: 0; color: var(--on-surface-var);">
+                    <span class="sym" style="font-family:'Material Symbols Outlined';font-size:14px;margin-right:2px;">timer</span>STUDY
+                  </span>
+                </div>
+                <div class="title">MAT263 · Linear Algebra</div>
+                <div class="meta">90 min block</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Class evening -->
+          <div class="flow-row">
+            <div class="time-col">18:00<div class="end">19:30</div></div>
+            <div class="rail-col">
+              <div class="rail top"></div>
+              <div class="indicator" style="background: var(--c-plum);"></div>
+              <div class="rail bottom" style="min-height: 6px;"></div>
+            </div>
+            <div class="content-col">
+              <div class="flow-card">
+                <div class="top-row">
+                  <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-plum) 10%, transparent); color: var(--c-plum); border-color: color-mix(in srgb, var(--c-plum) 20%, transparent);">
+                    <span class="dot" style="background: var(--c-plum)"></span>SOC101
+                  </span>
+                </div>
+                <div class="title">Society & Engineering</div>
+                <div class="meta"><span class="sym">place</span>Great Hall</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB -->
+      <div class="fab capture-fab"><span class="sym">add</span></div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav">
+        <div class="tab active"><span class="sym">wb_sunny</span><span class="label">Today</span></div>
+        <div class="tab"><span class="sym">calendar_month</span><span class="label">Timetable</span></div>
+        <div class="tab"><span class="sym">menu_book</span><span class="label">Courses</span></div>
+        <div class="tab"><span class="sym">timer</span><span class="label">Study</span></div>
+        <div class="tab"><span class="sym">tune</span><span class="label">Settings</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========================================================
+       2. Timetable
+       ======================================================== -->
+  <div class="phone-wrap">
+    <span class="phone-label">Timetable · Week view</span>
+    <div class="phone"><div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="icons">
+          <span class="sym">network_cell</span>
+          <span class="sym">wifi</span>
+          <span class="sym">battery_full</span>
+        </span>
+      </div>
+      <div class="content">
+        <div class="home-greeting" style="margin: 4px 0 8px">
+          <div class="dateline" style="margin-bottom: 8px">YOUR WEEK IN MOTION</div>
+          <h1 style="font-size: 28px;">Timetable</h1>
+        </div>
+
+        <div class="day-tabs">
+          <div class="day-tab">SUN</div>
+          <div class="day-tab active">MON</div>
+          <div class="day-tab">TUE<span class="today-dot"></span></div>
+          <div class="day-tab">WED</div>
+          <div class="day-tab">THU</div>
+          <div class="day-tab">FRI</div>
+          <div class="day-tab">SAT</div>
+        </div>
+
+        <div style="margin-top: 12px"></div>
+
+        <div class="timetable-row">
+          <div class="time-col">08:00<div class="end">09:30</div></div>
+          <div class="accent-rail" style="background: color-mix(in srgb, var(--c-blue) 70%, transparent);"></div>
+          <div class="body">
+            <div class="top-row" style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-blue) 10%, transparent); color: var(--c-blue); border-color: color-mix(in srgb, var(--c-blue) 20%, transparent);">
+                <span class="dot" style="background: var(--c-blue)"></span>COE271
+              </span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Computer Networking</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);display:inline-flex;align-items:center;gap:5px;">
+              <span class="sym" style="font-family:'Material Symbols Outlined';font-size:13px;">place</span>PB 105
+            </div>
+          </div>
+        </div>
+
+        <div class="timetable-row">
+          <div class="time-col">10:00<div class="end">11:30</div></div>
+          <div class="accent-rail" style="background: color-mix(in srgb, var(--c-rust) 70%, transparent);"></div>
+          <div class="body">
+            <div class="top-row" style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-rust) 10%, transparent); color: var(--c-rust); border-color: color-mix(in srgb, var(--c-rust) 20%, transparent);">
+                <span class="dot" style="background: var(--c-rust)"></span>MEC241
+              </span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Engineering Thermodynamics</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);display:inline-flex;align-items:center;gap:5px;">
+              <span class="sym" style="font-family:'Material Symbols Outlined';font-size:13px;">place</span>MEE LT 2
+            </div>
+          </div>
+        </div>
+
+        <div class="timetable-row">
+          <div class="time-col">14:00<div class="end">15:30</div></div>
+          <div class="accent-rail" style="background: color-mix(in srgb, var(--c-moss) 70%, transparent);"></div>
+          <div class="body">
+            <div class="top-row" style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-moss) 10%, transparent); color: var(--c-moss); border-color: color-mix(in srgb, var(--c-moss) 20%, transparent);">
+                <span class="dot" style="background: var(--c-moss)"></span>MAT263
+              </span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Linear Algebra</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);display:inline-flex;align-items:center;gap:5px;">
+              <span class="sym" style="font-family:'Material Symbols Outlined';font-size:13px;">place</span>SCI 204
+            </div>
+          </div>
+        </div>
+
+        <div class="timetable-row">
+          <div class="time-col">18:00<div class="end">19:30</div></div>
+          <div class="accent-rail" style="background: color-mix(in srgb, var(--c-plum) 70%, transparent);"></div>
+          <div class="body">
+            <div class="top-row" style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-plum) 10%, transparent); color: var(--c-plum); border-color: color-mix(in srgb, var(--c-plum) 20%, transparent);">
+                <span class="dot" style="background: var(--c-plum)"></span>SOC101
+              </span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Society & Engineering</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);display:inline-flex;align-items:center;gap:5px;">
+              <span class="sym" style="font-family:'Material Symbols Outlined';font-size:13px;">place</span>Great Hall
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fab capture-fab"><span class="sym">add</span></div>
+      <div class="bottom-nav">
+        <div class="tab"><span class="sym">wb_sunny</span><span class="label">Today</span></div>
+        <div class="tab active"><span class="sym">calendar_month</span><span class="label">Timetable</span></div>
+        <div class="tab"><span class="sym">menu_book</span></div>
+        <div class="tab"><span class="sym">timer</span></div>
+        <div class="tab"><span class="sym">tune</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========================================================
+       3. Pomodoro
+       ======================================================== -->
+  <div class="phone-wrap">
+    <span class="phone-label">Pomodoro · Focus session</span>
+    <div class="phone"><div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="icons">
+          <span class="sym">network_cell</span>
+          <span class="sym">wifi</span>
+          <span class="sym">battery_full</span>
+        </span>
+      </div>
+      <div class="content pomo-screen">
+        <div class="topbar" style="border:0; margin-bottom: 0; width: 100%; padding-bottom: 0;">
+          <div class="back-btn"><span class="sym">arrow_back</span></div>
+          <div class="title">Focus</div>
+          <div class="spacer"></div>
+        </div>
+
+        <div class="pomo-ring" style="margin-top: 36px;">
+          <svg viewBox="0 0 260 260">
+            <circle class="rail" cx="130" cy="130" r="115" />
+            <circle class="progress" cx="130" cy="130" r="115"
+                    stroke-dasharray="722.6"
+                    stroke-dashoffset="231.2" /><!-- 68% complete -->
+          </svg>
+          <div class="pomo-center">
+            <div class="pomo-time">17:43</div>
+            <div class="pomo-phase">FOCUS</div>
+          </div>
+        </div>
+
+        <div class="pomo-pips">
+          <div class="pip on"></div>
+          <div class="pip on"></div>
+          <div class="pip on"></div>
+          <div class="pip"></div>
+        </div>
+
+        <div class="pomo-controls">
+          <button class="btn secondary"><span class="sym">refresh</span>Reset</button>
+          <button class="btn primary"><span class="sym">pause</span>Pause</button>
+          <button class="btn secondary"><span class="sym">skip_next</span>Skip</button>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========================================================
+       4. Deadlines
+       ======================================================== -->
+  <div class="phone-wrap">
+    <span class="phone-label">Deadlines · Urgency × weight</span>
+    <div class="phone"><div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="icons">
+          <span class="sym">network_cell</span>
+          <span class="sym">wifi</span>
+          <span class="sym">battery_full</span>
+        </span>
+      </div>
+      <div class="content">
+        <div class="topbar">
+          <div class="back-btn"><span class="sym">arrow_back</span></div>
+          <div class="title">Deadlines</div>
+          <div class="spacer"></div>
+        </div>
+
+        <div class="deadline-row" onclick="this.querySelector('.check').classList.toggle('done'); this.querySelector('.body').classList.toggle('done')">
+          <div class="check"></div>
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-rust) 10%, transparent); color: var(--c-rust); border-color: color-mix(in srgb, var(--c-rust) 20%, transparent);">
+                <span class="dot" style="background: var(--c-rust)"></span>MEC241
+              </span>
+              <span class="due-label">TODAY</span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Lab Assignment 3</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);">Mon, 26 May · 13:00 · 30%</div>
+          </div>
+        </div>
+
+        <div class="deadline-row" onclick="this.querySelector('.check').classList.toggle('done'); this.querySelector('.body').classList.toggle('done')">
+          <div class="check"></div>
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-blue) 10%, transparent); color: var(--c-blue); border-color: color-mix(in srgb, var(--c-blue) 20%, transparent);">
+                <span class="dot" style="background: var(--c-blue)"></span>COE271
+              </span>
+              <span class="due-label">SOON</span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Network protocols paper</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);">Wed, 28 May · 23:59 · 20%</div>
+          </div>
+        </div>
+
+        <div class="deadline-row" onclick="this.querySelector('.check').classList.toggle('done'); this.querySelector('.body').classList.toggle('done')">
+          <div class="check"></div>
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-moss) 10%, transparent); color: var(--c-moss); border-color: color-mix(in srgb, var(--c-moss) 20%, transparent);">
+                <span class="dot" style="background: var(--c-moss)"></span>MAT263
+              </span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Problem set 7</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);">Fri, 30 May · 17:00 · 10%</div>
+          </div>
+        </div>
+
+        <div class="deadline-row" onclick="this.querySelector('.check').classList.toggle('done'); this.querySelector('.body').classList.toggle('done')">
+          <div class="check"></div>
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-plum) 10%, transparent); color: var(--c-plum); border-color: color-mix(in srgb, var(--c-plum) 20%, transparent);">
+                <span class="dot" style="background: var(--c-plum)"></span>SOC101
+              </span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Reflective essay</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);">Mon, 2 Jun · 23:59 · 15%</div>
+          </div>
+        </div>
+
+        <div class="deadline-row" onclick="this.querySelector('.check').classList.toggle('done'); this.querySelector('.body').classList.toggle('done')">
+          <div class="check done"><span class="sym">check</span></div>
+          <div class="body done">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-ochre) 10%, transparent); color: var(--c-ochre); border-color: color-mix(in srgb, var(--c-ochre) 20%, transparent);">
+                <span class="dot" style="background: var(--c-ochre)"></span>EEE221
+              </span>
+            </div>
+            <div class="title" style="font-size:15px;font-weight:500;">Circuit lab pre-read</div>
+            <div class="meta" style="font-size:13px;color:var(--on-surface-var);">Submitted · 22 May</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fab capture-fab"><span class="sym">add</span></div>
+      <div class="bottom-nav">
+        <div class="tab active"><span class="sym">wb_sunny</span><span class="label">Today</span></div>
+        <div class="tab"><span class="sym">calendar_month</span></div>
+        <div class="tab"><span class="sym">menu_book</span></div>
+        <div class="tab"><span class="sym">timer</span></div>
+        <div class="tab"><span class="sym">tune</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========================================================
+       5. Stress breakdown sheet (modal)
+       ======================================================== -->
+  <div class="phone-wrap">
+    <span class="phone-label">Stress breakdown · Tap-through</span>
+    <div class="phone"><div class="screen sheet-screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="icons">
+          <span class="sym">network_cell</span>
+          <span class="sym">wifi</span>
+          <span class="sym">battery_full</span>
+        </span>
+      </div>
+      <div class="content">
+        <!-- Faded home behind -->
+        <div class="home-greeting" style="opacity:0.4;">
+          <div class="dateline">MONDAY · 26 MAY</div>
+          <h1>Good morning, Karlson</h1>
+        </div>
+        <div class="stress-card" style="opacity:0.4;">
+          <div class="head">
+            <div>
+              <div class="label">TODAY'S LOAD</div>
+              <span class="number">62</span><span class="denom">/100</span>
+            </div>
+            <span class="band">Heavy</span>
+          </div>
+          <div class="stress-bar"><div class="fill" style="width: 62%"></div></div>
+        </div>
+      </div>
+
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <h2>WHAT'S DRIVING TODAY</h2>
+        <div class="big-num">62<span class="denom">/100</span></div>
+
+        <div class="contrib-row">
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-rust) 10%, transparent); color: var(--c-rust); border-color: color-mix(in srgb, var(--c-rust) 20%, transparent);">
+                <span class="dot" style="background: var(--c-rust)"></span>MEC241
+              </span>
+              <span style="font-size:13px;font-weight:500;font-feature-settings:'tnum' 1;color:var(--on-surface-var);">IN 4H</span>
+            </div>
+            <div style="font-size:15px;font-weight:500;">Lab Assignment 3</div>
+            <div style="font-size:12px;font-weight:500;letter-spacing:0.02em;color:var(--on-surface-var);">26 May, 13:00 · 30% weight</div>
+          </div>
+          <div class="points-col">
+            <div class="points">+27</div>
+            <div class="bar"><div class="fill" style="width: 100%; background: var(--c-rust);"></div></div>
+          </div>
+        </div>
+
+        <div class="contrib-row">
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-blue) 10%, transparent); color: var(--c-blue); border-color: color-mix(in srgb, var(--c-blue) 20%, transparent);">
+                <span class="dot" style="background: var(--c-blue)"></span>COE271
+              </span>
+              <span style="font-size:13px;font-weight:500;font-feature-settings:'tnum' 1;color:var(--on-surface-var);">IN 2D</span>
+            </div>
+            <div style="font-size:15px;font-weight:500;">Network protocols paper</div>
+            <div style="font-size:12px;font-weight:500;letter-spacing:0.02em;color:var(--on-surface-var);">28 May, 23:59 · 20% weight</div>
+          </div>
+          <div class="points-col">
+            <div class="points">+19</div>
+            <div class="bar"><div class="fill" style="width: 70%; background: var(--c-blue);"></div></div>
+          </div>
+        </div>
+
+        <div class="contrib-row">
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-plum) 10%, transparent); color: var(--c-plum); border-color: color-mix(in srgb, var(--c-plum) 20%, transparent);">
+                <span class="dot" style="background: var(--c-plum)"></span>SOC101
+              </span>
+              <span style="font-size:13px;font-weight:500;font-feature-settings:'tnum' 1;color:var(--on-surface-var);">IN 7D</span>
+            </div>
+            <div style="font-size:15px;font-weight:500;">Reflective essay</div>
+            <div style="font-size:12px;font-weight:500;letter-spacing:0.02em;color:var(--on-surface-var);">2 Jun, 23:59 · 15% weight</div>
+          </div>
+          <div class="points-col">
+            <div class="points">+10</div>
+            <div class="bar"><div class="fill" style="width: 38%; background: var(--c-plum);"></div></div>
+          </div>
+        </div>
+
+        <div class="contrib-row" style="border-bottom: 0;">
+          <div class="body">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="chip tag has-color" style="background: color-mix(in srgb, var(--c-moss) 10%, transparent); color: var(--c-moss); border-color: color-mix(in srgb, var(--c-moss) 20%, transparent);">
+                <span class="dot" style="background: var(--c-moss)"></span>MAT263
+              </span>
+              <span style="font-size:13px;font-weight:500;font-feature-settings:'tnum' 1;color:var(--on-surface-var);">IN 4D</span>
+            </div>
+            <div style="font-size:15px;font-weight:500;">Problem set 7</div>
+            <div style="font-size:12px;font-weight:500;letter-spacing:0.02em;color:var(--on-surface-var);">30 May, 17:00 · 10% weight</div>
+          </div>
+          <div class="points-col">
+            <div class="points">+6</div>
+            <div class="bar"><div class="fill" style="width: 22%; background: var(--c-moss);"></div></div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========================================================
+       6. Settings (theme picker showcase)
+       ======================================================== -->
+  <div class="phone-wrap">
+    <span class="phone-label">Settings · Theme picker</span>
+    <div class="phone"><div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span class="icons">
+          <span class="sym">network_cell</span>
+          <span class="sym">wifi</span>
+          <span class="sym">battery_full</span>
+        </span>
+      </div>
+      <div class="content">
+        <div class="home-greeting" style="margin: 4px 0 16px">
+          <h1 style="font-size: 28px;">Settings</h1>
+        </div>
+
+        <div class="section-label">Appearance</div>
+        <div class="surface" style="margin-top: 8px; margin-bottom: 20px;">
+          <div style="font-size:15px;font-weight:500;margin-bottom:10px;">Theme</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <span class="chip">Match system</span>
+            <span class="chip" id="chip-light">Light</span>
+            <span class="chip" id="chip-dark">Dark</span>
+            <span class="chip" style="background:var(--gold);border-color:transparent;color:var(--ink);">KNUST gold</span>
+            <span class="chip">Monochrome</span>
+          </div>
+        </div>
+
+        <div class="section-label">Notifications</div>
+        <div class="surface tap" style="margin-top: 8px; display:flex; align-items:center; gap:12px;">
+          <span class="sym" style="font-family:'Material Symbols Outlined';font-size:20px;">record_voice_over</span>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:500;">Speak class names</div>
+            <div style="font-size:13px;color:var(--on-surface-var);">Use text-to-speech for class reminders.</div>
+          </div>
+          <!-- Toggle -->
+          <div style="width: 44px; height: 26px; border-radius: 999px; background: var(--hairline-strong); position: relative;">
+            <div style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface);"></div>
+          </div>
+        </div>
+
+        <div class="surface tap" style="margin-top: 12px; display:flex; align-items:center; gap:12px;">
+          <span class="sym" style="font-family:'Material Symbols Outlined';font-size:20px;">notifications_active</span>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:500;">Sounds per channel</div>
+            <div style="font-size:13px;color:var(--on-surface-var);">Pick a sound for each reminder type.</div>
+          </div>
+          <span class="sym" style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--on-surface-var);">chevron_right</span>
+        </div>
+
+        <div class="surface tap" style="margin-top: 12px; display:flex; align-items:center; gap:12px;">
+          <span class="sym" style="font-family:'Material Symbols Outlined';font-size:20px;">battery_alert</span>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:500;">Battery optimization</div>
+            <div style="font-size:13px;color:var(--on-surface-var);">Make sure reminders fire on time.</div>
+          </div>
+          <span class="sym" style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--on-surface-var);">chevron_right</span>
+        </div>
+
+        <div class="section-label" style="margin-top:24px">Data</div>
+        <div class="surface tap" style="margin-top: 8px; display:flex; align-items:center; gap:12px;">
+          <span class="sym" style="font-family:'Material Symbols Outlined';font-size:20px;">import_export</span>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:500;">Export / Import</div>
+            <div style="font-size:13px;color:var(--on-surface-var);">Back up to a JSON file on your phone.</div>
+          </div>
+          <span class="sym" style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--on-surface-var);">chevron_right</span>
+        </div>
+
+        <div class="section-label" style="margin-top:24px">About</div>
+        <div class="surface" style="margin-top: 8px;">
+          <div style="font-size:15px;font-weight:500;">Lamla</div>
+          <div style="font-size:13px;color:var(--on-surface-var);">Local-only. No cloud, no accounts, no telemetry.</div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="tab"><span class="sym">wb_sunny</span></div>
+        <div class="tab"><span class="sym">calendar_month</span></div>
+        <div class="tab"><span class="sym">menu_book</span></div>
+        <div class="tab"><span class="sym">timer</span></div>
+        <div class="tab active"><span class="sym">tune</span><span class="label">Settings</span></div>
+      </div>
+    </div></div>
+  </div>
+
+</section>
+
+<div class="notes">
+  This preview is a static render of the production Compose components — not a separate design.
+  All colors, type sizes, spacing, and corner radii come from the same tokens defined in
+  <code>ui/theme/Color.kt</code>, <code>Type.kt</code>, <code>Spacing.kt</code>, and <code>Shape.kt</code>.
+  Things that the real app does that this HTML can only hint at: spring-physics motion on press,
+  page swipe-pager between days in Timetable, real haptic ticks, the Pomodoro ring counting down second-by-second
+  with tabular figures, and the bottom-sheet expand gesture.
+</div>
+
+<script>
+  // Theme toggle — flips data-theme attribute, all CSS animates via the
+  // transition: rules on background/color above.
+  const buttons = document.querySelectorAll('.theme-toggle button');
+  const body = document.body;
+  const apply = (mode) => {
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.set === mode));
+    if (mode === 'auto') {
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      body.dataset.theme = prefers ? 'dark' : 'light';
+    } else {
+      body.dataset.theme = mode;
+    }
+  };
+  buttons.forEach(b => b.addEventListener('click', () => apply(b.dataset.set)));
+
+  // Auto-update if user is in 'auto' mode and system changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    const auto = document.querySelector('.theme-toggle button.active').dataset.set === 'auto';
+    if (auto) apply('auto');
+  });
+
+  // Bottom nav: tapping a tab in any screen visually toggles the active state in that phone only
+  document.querySelectorAll('.bottom-nav').forEach(nav => {
+    nav.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        nav.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+  });
+
+  // Pomodoro pseudo-tick — moves the ring 0.5% per second so you see motion
+  let progress = 0.68;
+  setInterval(() => {
+    progress = Math.min(0.999, progress + 0.005);
+    document.querySelectorAll('.pomo-ring .progress').forEach(c => {
+      const total = 2 * Math.PI * 115;
+      c.setAttribute('stroke-dasharray', total.toFixed(1));
+      c.setAttribute('stroke-dashoffset', (total * (1 - progress)).toFixed(1));
+    });
+    const m = Math.floor((25 * (1 - progress) * 60) / 60);
+    const s = Math.floor((25 * (1 - progress) * 60) % 60);
+    document.querySelectorAll('.pomo-time').forEach(el => {
+      el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    });
+  }, 1000);
+</script>
+
+</body>
+</html>

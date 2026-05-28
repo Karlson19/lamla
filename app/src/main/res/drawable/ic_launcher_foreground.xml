@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!--
+      A clock at five-to-twelve — the "last minute" wink for Last Minute Learners.
+      All marks sit inside the adaptive-icon safe zone (centre ~66dp) so nothing
+      clips when the launcher masks to a circle/squircle. Single gold ink (#C5A35A)
+      so the themed/monochrome layer stays a clean silhouette.
+    -->
+    <group>
+        <!-- Clock face ring (radius 30, centred at 54,54) -->
+        <path
+            android:strokeColor="#C5A35A"
+            android:strokeWidth="5"
+            android:strokeLineCap="round"
+            android:pathData="M54,24 a30,30 0 1,0 0,60 a30,30 0 1,0 0,-60" />
+
+        <!-- Hour ticks at 12 / 3 / 6 / 9 -->
+        <path
+            android:strokeColor="#C5A35A"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"
+            android:pathData="M54,28 L54,33 M80,54 L75,54 M54,80 L54,75 M28,54 L33,54" />
+
+        <!-- Minute hand → 11 o'clock (the :55) -->
+        <path
+            android:strokeColor="#C5A35A"
+            android:strokeWidth="4"
+            android:strokeLineCap="round"
+            android:pathData="M54,54 L42,34" />
+
+        <!-- Hour hand → just shy of 12 -->
+        <path
+            android:strokeColor="#C5A35A"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round"
+            android:pathData="M54,54 L53,39" />
+
+        <!-- Centre pin -->
+        <path
+            android:fillColor="#FAFAF7"
+            android:pathData="M54,54 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    </group>
+</vector>

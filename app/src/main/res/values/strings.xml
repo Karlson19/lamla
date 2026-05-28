@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lamla</string>
+    <string name="app_tagline">Your day, considered.</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_home">Today</string>
+    <string name="nav_timetable">Timetable</string>
+    <string name="nav_courses">Courses</string>
+    <string name="nav_study">Study</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home -->
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_greeting_night">Burning the midnight oil</string>
+
+    <string name="home_stress_chill">Chill</string>
+    <string name="home_stress_steady">Steady</string>
+    <string name="home_stress_heavy">Heavy</string>
+    <string name="home_stress_crunch">Crunch</string>
+
+    <string name="home_no_classes">No classes today.</string>
+    <string name="home_no_deadlines">Nothing pressing. Take a breath.</string>
+
+    <string name="home_next_class">Next class</string>
+    <string name="home_starts_in">in %1$s</string>
+    <string name="home_starts_now">starting now</string>
+
+    <!-- Quick capture -->
+    <string name="capture_title">Quick capture</string>
+    <string name="capture_text">Text note</string>
+    <string name="capture_photo">Snap photo</string>
+    <string name="capture_voice">Voice memo</string>
+    <string name="capture_hint_active_class">Will be tagged to %1$s</string>
+    <string name="capture_hint_no_class">No class active — pick a course</string>
+
+    <!-- Notification channels -->
+    <string name="channel_class_reminder">Class reminders</string>
+    <string name="channel_class_reminder_desc">Heads-up before your classes start.</string>
+    <string name="channel_deadline_warning">Deadline warnings</string>
+    <string name="channel_deadline_warning_desc">Day-of, hours-before nudges for deadlines.</string>
+    <string name="channel_deadline_imminent">Imminent deadlines</string>
+    <string name="channel_deadline_imminent_desc">Last-hour alerts for deadlines about to lapse.</string>
+    <string name="channel_study_session">Study sessions</string>
+    <string name="channel_study_session_desc">Pomodoro and scheduled study block alerts.</string>
+    <string name="channel_exam_alert">Exam alerts</string>
+    <string name="channel_exam_alert_desc">High-priority exam reminders.</string>
+    <string name="channel_office_hours">Office hours</string>
+    <string name="channel_office_hours_desc">Lecturer office-hour reminders and your queued questions.</string>
+    <string name="channel_general">General</string>
+    <string name="channel_general_desc">Miscellaneous app messages.</string>
+
+    <!-- Widgets -->
+    <string name="widget_next_class_label">Lamla — Next class</string>
+    <string name="widget_today_label">Lamla — Today</string>
+    <string name="widget_no_class">No upcoming class.</string>
+    <string name="widget_in_minutes">in %1$d min</string>
+
+    <!-- Settings -->
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">Match system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_gold">KNUST gold</string>
+    <string name="settings_theme_monochrome">Monochrome</string>
+    <string name="settings_voice_notifications">Speak class names</string>
+    <string name="settings_battery_guide">Disable battery optimization</string>
+    <string name="settings_export">Export data (JSON)</string>
+    <string name="settings_import">Import data (JSON)</string>
+
+    <!-- OEM battery -->
+    <string name="oem_guide_title">One small thing</string>
+    <string name="oem_guide_body">Your phone aggressively kills background apps. To make sure class reminders fire on time, you\'ll want to disable battery optimization for Lamla.</string>
+    <string name="oem_guide_action">Open settings</string>
+    <string name="oem_guide_skip">I\'ll do this later</string>
+
+    <!-- Misc -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_duplicate">Duplicate</string>
+    <string name="action_done">Done</string>
+    <string name="action_add">Add</string>
+    <string name="action_edit">Edit</string>
+</resources>

@@ -1,0 +1,165 @@
+package app.lamla.presentation.screens.study
+
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.lamla.ui.components.*
+import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.lamla
+import kotlin.math.min
+
+/**
+ * Pomodoro screen.
+ *
+ * Visual centerpiece: a giant ring + mono-figure timer. The ring tracks remaining
+ * time within the current phase; below it, three pip markers show position in the
+ * 4-cycle long-break cadence (one pip lights for each completed focus block).
+ *
+ * Phases: Focus → Short break → Focus → Short → Focus → Short → Focus → LONG break → repeat.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PomodoroScreen(
+    onBack: () -> Unit,
+    viewModel: PomodoroViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(state.phaseLabel, style = MaterialTheme.typography.titleMedium) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(MaterialTheme.lamla.spacing.gutter),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.weight(0.3f))
+
+            // Ring + timer
+            Box(modifier = Modifier.size(280.dp), contentAlignment = Alignment.Center) {
+                val progress by animateFloatAsState(
+                    targetValue = state.progress,
+                    animationSpec = tween(durationMillis = 800, easing = LinearEasing),
+                    label = "pomo-progress"
+                )
+                ProgressRing(
+                    progress = progress,
+                    isBreak = state.isBreak,
+                    accent = MaterialTheme.colorScheme.onSurface
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = state.timerLabel,
+                        style = LamlaTextStyles.Timer,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = state.phaseLabel.uppercase(),
+                        style = LamlaTextStyles.SectionLabel,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Spacer(Modifier.size(24.dp))
+
+            // Cycle pips
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                repeat(state.cyclesUntilLong) { i ->
+                    val filled = i < state.completedFocusCycles
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(if (filled) MaterialTheme.colorScheme.onSurface else MaterialTheme.lamla.colors.hairlineStrong)
+                    )
+                }
+            }
+            Spacer(Modifier.weight(0.4f))
+
+            // Controls
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                LamlaSecondaryButton(
+                    label = "Reset",
+                    leadingIcon = Icons.Outlined.Refresh,
+                    onClick = { viewModel.reset() },
+                    modifier = Modifier.weight(1f)
+                )
+                LamlaButton(
+                    label = if (state.isRunning) "Pause" else "Start",
+                    leadingIcon = if (state.isRunning) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
+                    onClick = { viewModel.toggle() },
+                    modifier = Modifier.weight(2f)
+                )
+                LamlaSecondaryButton(
+                    label = "Skip",
+                    leadingIcon = Icons.Outlined.SkipNext,
+                    onClick = { viewModel.skip() },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(Modifier.size(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun ProgressRing(progress: Float, isBreak: Boolean, accent: Color) {
+    val railColor = MaterialTheme.lamla.colors.timelineRail
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val strokeWidth = 14.dp.toPx()
+        val diameter = min(size.width, size.height) - strokeWidth
+        val topLeft = Offset((size.width - diameter) / 2, (size.height - diameter) / 2)
+        val ringSize = Size(diameter, diameter)
+
+        // Rail
+        drawArc(
+            color = railColor,
+            startAngle = -90f,
+            sweepAngle = 360f,
+            useCenter = false,
+            topLeft = topLeft,
+            size = ringSize,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+        )
+        // Progress
+        drawArc(
+            color = if (isBreak) accent.copy(alpha = 0.5f) else accent,
+            startAngle = -90f,
+            sweepAngle = 360f * progress.coerceIn(0f, 1f),
+            useCenter = false,
+            topLeft = topLeft,
+            size = ringSize,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+        )
+    }
+}
