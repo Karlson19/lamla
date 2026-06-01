@@ -14,17 +14,25 @@ import app.lamla.R
  * Notification channels.
  *
  * One channel per category (spec table). Each channel:
- *   - Has a distinct default sound, importance, and (where applicable) vibration pattern.
- *   - Sound URIs prefer bundled `.ogg` files under `res/raw`; if a sound is missing we fall back
- *     gracefully to the system default rather than crashing the channel setup.
- *   - User can override sounds via Settings (see [AppPreferences.channelSound]).
+ *   - Has its own importance and (where applicable) vibration pattern.
+ *   - Resolves its sound in this order: a bundled `.ogg` under `res/raw` if one is
+ *     present, otherwise the system default tone for its [Channel.fallbackType].
+ *     We do not ship custom audio today, so every channel currently lands on a
+ *     system tone - but the urgent channels fall back to the louder ALARM tone and
+ *     the rest to the NOTIFICATION tone, so a "due now" alert does not sound the
+ *     same as a routine ping. Drop a file into `res/raw` and it is picked up with
+ *     no code change.
+ *   - The user can pick any sound (including audio files on their device) per
+ *     category from Settings -> Notification sounds, which opens the system channel
+ *     screen. Android owns channel sound after creation, so this is the route that
+ *     reliably changes it without disturbing queued reminders.
  *
- * Channel creation is idempotent — Android replaces channels of the same id but
- * preserves user-modified attributes (mute state, importance downgrade) per its
- * spec. The only attribute we can change after creation is the *name/description*.
- * Sound and importance changes require a new channel id, so we version ids:
- * `class_reminder_v1`, etc., and bump the suffix only if we genuinely need to
- * force a reset.
+ * Channel creation is idempotent - Android replaces channels of the same id but
+ * preserves user-modified attributes (mute state, importance downgrade, a custom
+ * sound the user chose) per its spec. The only attribute we can change after
+ * creation is the *name/description*; sound and importance changes require a new
+ * channel id, so we version ids: `class_reminder_v1`, etc., and bump the suffix
+ * only if we genuinely need to force a reset.
  */
 object NotificationChannels {
 
@@ -35,7 +43,10 @@ object NotificationChannels {
         val importance: Int,
         val rawSound: String?,            // res/raw/<name>.ogg without extension; null = system default
         val vibrate: LongArray? = null,
-        val showBadge: Boolean = true
+        val showBadge: Boolean = true,
+        // System tone used when no bundled rawSound file is present. Urgent, act-now
+        // channels use TYPE_ALARM so they are audibly distinct from routine pings.
+        val fallbackType: Int = RingtoneManager.TYPE_NOTIFICATION
     )
 
     // Sounds bundled in res/raw/. If you add a file, register the name here.
@@ -71,7 +82,8 @@ object NotificationChannels {
         descRes = R.string.channel_deadline_imminent_desc,
         importance = NotificationManager.IMPORTANCE_MAX,
         rawSound = Sound.Alarm,
-        vibrate = longArrayOf(0, 250, 100, 250, 100, 250)
+        vibrate = longArrayOf(0, 250, 100, 250, 100, 250),
+        fallbackType = RingtoneManager.TYPE_ALARM
     )
 
     val StudySession = Channel(
@@ -89,7 +101,8 @@ object NotificationChannels {
         descRes = R.string.channel_exam_alert_desc,
         importance = NotificationManager.IMPORTANCE_MAX,
         rawSound = Sound.Bell,
-        vibrate = longArrayOf(0, 300, 100, 300)
+        vibrate = longArrayOf(0, 300, 100, 300),
+        fallbackType = RingtoneManager.TYPE_ALARM
     )
 
     val OfficeHours = Channel(
@@ -130,7 +143,7 @@ object NotificationChannels {
                     val resId = context.resources.getIdentifier(rawName, "raw", context.packageName)
                     if (resId == 0) null else Uri.parse("android.resource://${context.packageName}/$resId")
                 }
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                ?: RingtoneManager.getDefaultUri(channel.fallbackType)
 
             setSound(
                 soundUri,

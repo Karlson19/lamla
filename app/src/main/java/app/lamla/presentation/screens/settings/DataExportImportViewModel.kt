@@ -31,7 +31,7 @@ data class LamlaBackup(
 /**
  * Backup/restore.
  *
- * Pure JSON via kotlinx-serialization. The schema is the domain models —
+ * Pure JSON via kotlinx-serialization. The schema is the domain models -
  * forwards-compatible by virtue of @Serializable's permissive defaults
  * (new optional fields don't break old backups).
  *
@@ -62,7 +62,7 @@ class DataExportImportViewModel @Inject constructor(
             classSessions = classRepo.observeAll().first(),
             deadlines = deadlineRepo.observeAll().first(),
             lecturers = lecturerRepo.observeAll().first(),
-            // Questions don't have an observe-all repo method; we skip them for now (kept thin).
+            questions = questionRepo.all(),
             personalEvents = personalRepo.observeAll().first(),
             studySessions = studyRepo.observeAll().first(),
             exams = examRepo.observeAll().first(),

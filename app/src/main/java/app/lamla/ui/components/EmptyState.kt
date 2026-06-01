@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import app.lamla.ui.theme.lamla
 
 /**
- * Empty state — a deliberately calm moment, not a sad face.
+ * Empty state - a deliberately calm moment, not a sad face.
  *
  * Things 3 ethos: empty isn't bad, it's earned. Phrasing should be warm, never
  * scolding ("Add your first deadline" not "You have no deadlines").

@@ -29,7 +29,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 /**
- * Home-screen widget: "NEXT — [Course code] — [Venue] at HH:MM".
+ * Home-screen widget: "NEXT - [Course code] - [Venue] at HH:MM".
  *
  * Glance reads from the same repositories via a Hilt entry point (widgets can't
  * @Inject directly). System triggers re-rendering every 15 min via the XML

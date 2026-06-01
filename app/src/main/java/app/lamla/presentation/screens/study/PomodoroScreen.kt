@@ -27,6 +27,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
+import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
 import kotlin.math.min
 
@@ -48,11 +50,13 @@ fun PomodoroScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(state.phaseLabel, style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -62,8 +66,19 @@ fun PomodoroScreen(
         ) {
             Spacer(Modifier.weight(0.3f))
 
-            // Ring + timer
-            Box(modifier = Modifier.size(280.dp), contentAlignment = Alignment.Center) {
+            // Ring + timer. A colored halo spills from the ring; it burns brightest
+            // during a running focus block and dims to an ember during breaks/pauses.
+            Box(
+                modifier = Modifier
+                    .size(280.dp)
+                    .glow(
+                        color = MaterialTheme.lamla.gradients.emberGlow,
+                        shape = CircleShape,
+                        radius = 56.dp,
+                        alpha = if (state.isRunning) (if (state.isBreak) 0.28f else 0.55f) else 0.12f
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
                 val progress by animateFloatAsState(
                     targetValue = state.progress,
                     animationSpec = tween(durationMillis = 800, easing = LinearEasing),

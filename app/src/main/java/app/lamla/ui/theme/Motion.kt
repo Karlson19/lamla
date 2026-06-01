@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
  * Three principles:
  *   1. Spring physics for state changes (a card snapping into "done" state should
  *      feel physical, not timed).
- *   2. Tweened durations for *transitions* (screen ↔ screen, list reorder) — predictable,
+ *   2. Tweened durations for *transitions* (screen ↔ screen, list reorder) - predictable,
  *      cache-friendly.
  *   3. Material 3 standard easing curves, named so callers don't import private APIs.
  *
@@ -40,7 +40,7 @@ data class LamlaMotion(
         dampingRatio = Spring.DampingRatioLowBouncy,
         stiffness = Spring.StiffnessVeryLow
     ),
-    /** Stiff but non-bouncy — generic value animations. */
+    /** Stiff but non-bouncy - generic value animations. */
     val springStandard: SpringSpec<Float> = spring(
         dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMedium
@@ -79,7 +79,7 @@ internal val Motion = LamlaMotion()
 internal val LocalLamlaMotion = staticCompositionLocalOf { Motion }
 
 /**
- * Elevation tokens — used sparingly. Material 3 maps elevation to tonal tint;
+ * Elevation tokens - used sparingly. Material 3 maps elevation to tonal tint;
  * we add subtle 1dp borders instead of heavy shadows.
  */
 data class LamlaElevation(

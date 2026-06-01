@@ -17,7 +17,7 @@ class OnboardingViewModel @Inject constructor(
 
     /**
      * Persist all onboarding answers in one atomic-ish step.
-     * `userName` may be blank — that's allowed, name is optional.
+     * `userName` may be blank - that's allowed, name is optional.
      */
     suspend fun complete(
         userName: String,

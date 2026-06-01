@@ -20,14 +20,14 @@ import app.lamla.R
  *
  * Inter for everything (UI), JetBrains Mono for the Pomodoro timer face only
  * (because monospace digits don't shimmy as the seconds tick). Both via the
- * downloadable-fonts provider — no font files bundled, no APK bloat.
+ * downloadable-fonts provider - no font files bundled, no APK bloat.
  *
  * The type scale is restrained: 4 display sizes, 3 body sizes. Tracking widens
  * at small sizes (UI labels) and tightens at display sizes. Line-height-style
  * is centered + trimmed so cap/baseline metrics don't add unwanted padding
  * around headlines (Compose's default leaves big gaps at the top of headings).
  *
- * Numeric features: tabular figures everywhere — countdowns, durations, timer.
+ * Numeric features: tabular figures everywhere - countdowns, durations, timer.
  * Achieved via [TextStyle.fontFeatureSettings] = "tnum".
  */
 
@@ -58,12 +58,12 @@ private val centeredAndTrimmed = LineHeightStyle(
     trim = Trim.Both
 )
 
-// Feature flags for OpenType — applied via fontFeatureSettings.
+// Feature flags for OpenType - applied via fontFeatureSettings.
 private const val TabularNums = "\"tnum\" 1, \"lnum\" 1"
 private const val CaseSensitive = "\"case\" 1, \"tnum\" 1"
 
 internal val LamlaTypography = Typography(
-    // Display — used sparingly (stress score number, countdown).
+    // Display - used sparingly (stress score number, countdown).
     // Light weight at large sizes feels editorial. Tight tracking.
     displayLarge = TextStyle(
         fontFamily = Inter,
@@ -93,7 +93,7 @@ internal val LamlaTypography = Typography(
         fontFeatureSettings = TabularNums
     ),
 
-    // Headline — section headers.
+    // Headline - section headers.
     headlineLarge = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
@@ -119,7 +119,7 @@ internal val LamlaTypography = Typography(
         lineHeightStyle = centeredAndTrimmed
     ),
 
-    // Title — card titles, dialog titles.
+    // Title - card titles, dialog titles.
     titleLarge = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Medium,
@@ -145,7 +145,7 @@ internal val LamlaTypography = Typography(
         lineHeightStyle = centeredAndTrimmed
     ),
 
-    // Body — long-form content.
+    // Body - long-form content.
     bodyLarge = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Normal,
@@ -171,7 +171,7 @@ internal val LamlaTypography = Typography(
         lineHeightStyle = centeredAndTrimmed
     ),
 
-    // Label — chips, button text, table column headers. Slightly wider tracking
+    // Label - chips, button text, table column headers. Slightly wider tracking
     // at small sizes for legibility (Pentagram convention).
     labelLarge = TextStyle(
         fontFamily = Inter,

@@ -19,7 +19,7 @@ sealed interface Reminder {
     /** Used as both the PendingIntent request code and the Notification id. */
     val stableId: Int
 
-    /** Source row id, e.g. classSessionId — for boot rescheduling lookup. */
+    /** Source row id, e.g. classSessionId - for boot rescheduling lookup. */
     val sourceId: Long
 
     /** Source kind discriminator, persisted as Intent extra. */
@@ -98,14 +98,14 @@ sealed interface Reminder {
  * Stable id construction.
  *
  * Hashing strategy: combine kind tag + sourceId + offset. Collisions across kinds
- * are astronomically unlikely but possible — we keep the kind tag namespace short
+ * are astronomically unlikely but possible - we keep the kind tag namespace short
  * (one char) so the hash space is mostly source+offset.
  *
  * `Int` ceiling fits PendingIntent request code requirements.
  */
 private fun stable(tag: String, sourceId: Long, offsetMinutes: Int): Int {
     val seed = (tag.hashCode().toLong() * 31L + sourceId) * 31L + offsetMinutes
-    // Mix bits, then collapse to Int — avoids dominance by sourceId alone.
+    // Mix bits, then collapse to Int - avoids dominance by sourceId alone.
     var h = seed
     h = h xor (h ushr 33)
     h *= -49064778989728563L           // SplitMix64 mixer

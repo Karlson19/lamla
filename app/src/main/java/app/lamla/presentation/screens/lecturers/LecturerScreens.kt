@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +28,7 @@ import app.lamla.domain.model.Lecturer
 import app.lamla.domain.model.Question
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -48,11 +50,13 @@ fun LecturersScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Lecturers", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         },
         floatingActionButton = {
@@ -129,11 +133,13 @@ fun LecturerDetailScreen(
     var newQuestion by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(lecturer?.name ?: "Lecturer", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -255,6 +261,8 @@ fun LecturerEditScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (lecturerId == null) "New lecturer" else "Edit lecturer", style = MaterialTheme.typography.titleMedium) },
@@ -262,7 +270,7 @@ fun LecturerEditScreen(
                 actions = {
                     TextButton(onClick = { scope.launch { if (viewModel.save()) onBack() } }, enabled = state.canSave) { Text("Save") }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->

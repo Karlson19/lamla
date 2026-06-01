@@ -1,6 +1,5 @@
 package app.lamla.presentation.screens.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,6 +26,7 @@ import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.AppTheme
 import app.lamla.ui.theme.swatch
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
 @Composable
@@ -41,7 +41,7 @@ fun SettingsScreen(
     var editingName by remember { mutableStateOf(false) }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
         contentPadding = PaddingValues(start = MaterialTheme.lamla.spacing.gutter, end = MaterialTheme.lamla.spacing.gutter, top = 24.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
@@ -137,7 +137,7 @@ private fun NameRow(name: String, onClick: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text("Your name", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                 Text(
-                    text = name.ifBlank { "Not set — tap to add" },
+                    text = name.ifBlank { "Not set. Tap to add" },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

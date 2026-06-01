@@ -55,7 +55,7 @@ class AlarmScheduler @Inject constructor(
                     pi
                 )
             } else {
-                // Best-effort fallback — user revoked exact-alarm permission.
+                // Best-effort fallback - user revoked exact-alarm permission.
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     reminder.triggerAtEpochMs,
@@ -78,7 +78,7 @@ class AlarmScheduler @Inject constructor(
         }
     }
 
-    /** Cancel by stableId — used when the underlying source row is mutated; we don't have full Reminder. */
+    /** Cancel by stableId - used when the underlying source row is mutated; we don't have full Reminder. */
     fun cancelByStableId(stableId: Int) {
         val intent = Intent(context, ReminderReceiver::class.java).setAction(ReminderReceiver.ACTION_FIRE)
         val pi = PendingIntent.getBroadcast(

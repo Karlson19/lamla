@@ -11,8 +11,8 @@ import kotlin.math.roundToInt
  * Stress score.
  *
  * Spec says: `sum(weight × urgency_factor)`. Two problems with that as written:
- *   1. Unbounded — one huge assignment dominates the entire scale forever.
- *   2. Constant urgency — a deadline 6 weeks out contributes the same as one tomorrow.
+ *   1. Unbounded - one huge assignment dominates the entire scale forever.
+ *   2. Constant urgency - a deadline 6 weeks out contributes the same as one tomorrow.
  *
  * Our formulation (still simple, still derivable from the same inputs):
  *
@@ -27,11 +27,11 @@ import kotlin.math.roundToInt
  *     but a stack of imminent deadlines easily reaches the Crunch band
  *
  * SCALE picked so a "normal full week of work" (e.g. 3 deadlines, all 20%, all within 72h)
- * lands in Steady-to-Heavy band ≈ 50-65. Tune via [SCALE] constant alone — every band
+ * lands in Steady-to-Heavy band ≈ 50-65. Tune via [SCALE] constant alone - every band
  * threshold falls out automatically.
  *
  * Returned with per-deadline contributions so the breakdown sheet can show
- * what's driving the number ("Network Lab assignment — contributes +21").
+ * what's driving the number ("Network Lab assignment - contributes +21").
  */
 object StressScore {
 

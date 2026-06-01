@@ -5,7 +5,7 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <!--
-      A clock at five-to-twelve — the "last minute" wink for Last Minute Learners.
+      A clock at five-to-twelve - the "last minute" wink for Last Minute Learners.
       All marks sit inside the adaptive-icon safe zone (centre ~66dp) so nothing
       clips when the launcher masks to a circle/squircle. Single gold ink (#C5A35A)
       so the themed/monochrome layer stays a clean silhouette.

@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
  * Color tokens.
  *
  * Not Material You default purple. Restrained, warm-neutral chrome with a single
- * brand accent. Per-course color comes from the course's own [Course.color] —
+ * brand accent. Per-course color comes from the course's own [Course.color] -
  * the app chrome stays out of the way.
  *
  * Light surface: warm off-white #FAFAF7 (not stark #FFFFFF)
@@ -41,8 +41,21 @@ internal object Palette {
     val GoldSoft    = Color(0xFFE3D4A8) // pressed/container on light
     val GoldGhost   = Color(0xFF3A3220) // container on dark (low-chroma)
 
+    // -- Ember set: the brand "fire" (a warm sunrise gradient) -----------------
+    // Used for hero gradients, the primary CTA, the stress gauge arc and glows.
+    // Brighter and more saturated than the chrome gold on purpose: these are the
+    // moments meant to feel alive.
+    val EmberGold   = Color(0xFFE3A93C) // amber-gold (gradient head)
+    val EmberAmber  = Color(0xFFF0823C) // warm amber-orange (gradient mid)
+    val EmberCoral  = Color(0xFFF2603E) // coral-orange (glow color)
+    val EmberRose   = Color(0xFFE8527A) // rose-pink (gradient tail)
+
+    // -- Cool electric accent: contrast pops against the warm ember ------------
+    val Electric    = Color(0xFF6C5CE7) // violet
+    val ElectricSky = Color(0xFF4DA6FF) // sky blue (gradient tail)
+
     // -- Semantic --------------------------------------------------------------
-    // Earthy, restrained — not bright web red/green/yellow. Closer to Linear/Things 3.
+    // Earthy, restrained - not bright web red/green/yellow. Closer to Linear/Things 3.
     val Sage        = Color(0xFF5C8064) // chill / success
     val SageDark    = Color(0xFF7BAA85)
     val Amber       = Color(0xFFB58532) // busy
@@ -51,7 +64,7 @@ internal object Palette {
     val RustDark    = Color(0xFFCE7A65)
 
     // -- Per-course palette (12 carefully chosen, all desaturated) -------------
-    // Used for course color picker. Avoid pure primaries — these feel curated.
+    // Used for course color picker. Avoid pure primaries - these feel curated.
     val CoursePalette: List<Color> = listOf(
         Color(0xFFB85C5C), // brick
         Color(0xFFC07F3D), // ochre

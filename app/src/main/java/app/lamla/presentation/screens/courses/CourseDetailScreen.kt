@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.model.Deadline
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import java.time.Instant
 import java.time.ZoneId
@@ -30,6 +31,7 @@ import java.time.format.DateTimeFormatter
 fun CourseDetailScreen(
     courseId: Long,
     onBack: () -> Unit,
+    onOpenCaptures: (Long) -> Unit = {},
     viewModel: CourseDetailViewModel = hiltViewModel()
 ) {
     LaunchedEffect(courseId) { viewModel.load(courseId) }
@@ -37,13 +39,15 @@ fun CourseDetailScreen(
     val course = state.course
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(course?.code ?: "Course", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -58,8 +62,7 @@ fun CourseDetailScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(MaterialTheme.colorScheme.background),
+                .padding(padding),
             contentPadding = PaddingValues(MaterialTheme.lamla.spacing.gutter),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
@@ -88,6 +91,17 @@ fun CourseDetailScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+            }
+            item {
+                LamlaNavRow(
+                    icon = Icons.Outlined.PhotoLibrary,
+                    title = "Captures",
+                    subtitle = if (state.captureCount == 0) "Snap notes, photos, and voice memos"
+                    else "${state.captureCount} saved for this course",
+                    accent = accent,
+                    badge = if (state.captureCount > 0) "${state.captureCount}" else null,
+                    onClick = { onOpenCaptures(course.id) }
+                )
             }
             item { SectionLabel(text = "Deadlines", trailing = "${state.deadlines.size}") }
             if (state.deadlines.isEmpty()) {

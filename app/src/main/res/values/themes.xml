@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Splash screen theme — used during cold start, then swapped to MaterialThemed Compose surface -->
+    <!-- Splash screen theme - used during cold start, then swapped to MaterialThemed Compose surface -->
     <style name="Theme.Lamla.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>

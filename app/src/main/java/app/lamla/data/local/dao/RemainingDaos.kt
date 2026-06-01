@@ -70,6 +70,9 @@ interface QuestionDao {
     @Query("SELECT * FROM questions WHERE lecturerId = :lecturerId AND answeredAtEpochMs IS NULL")
     suspend fun pendingForLecturer(lecturerId: Long): List<QuestionEntity>
 
+    @Query("SELECT * FROM questions")
+    suspend fun all(): List<QuestionEntity>
+
     @Query("UPDATE questions SET answeredAtEpochMs = :answeredAt WHERE id = :id")
     suspend fun markAnswered(id: Long, answeredAt: Long)
 }

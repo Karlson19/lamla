@@ -34,7 +34,7 @@
     <string name="capture_photo">Snap photo</string>
     <string name="capture_voice">Voice memo</string>
     <string name="capture_hint_active_class">Will be tagged to %1$s</string>
-    <string name="capture_hint_no_class">No class active — pick a course</string>
+    <string name="capture_hint_no_class">No class active. Pick a course</string>
 
     <!-- Notification channels -->
     <string name="channel_class_reminder">Class reminders</string>
@@ -53,8 +53,8 @@
     <string name="channel_general_desc">Miscellaneous app messages.</string>
 
     <!-- Widgets -->
-    <string name="widget_next_class_label">Lamla — Next class</string>
-    <string name="widget_today_label">Lamla — Today</string>
+    <string name="widget_next_class_label">Lamla: Next class</string>
+    <string name="widget_today_label">Lamla: Today</string>
     <string name="widget_no_class">No upcoming class.</string>
     <string name="widget_in_minutes">in %1$d min</string>
 

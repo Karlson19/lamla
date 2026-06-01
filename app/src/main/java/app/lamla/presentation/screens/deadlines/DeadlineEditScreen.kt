@@ -8,12 +8,14 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.model.Course
 import app.lamla.ui.components.*
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -36,6 +38,8 @@ fun DeadlineEditScreen(
     var showTime by remember { mutableStateOf(false) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (deadlineId == null) "New deadline" else "Edit deadline", style = MaterialTheme.typography.titleMedium) },
@@ -45,7 +49,7 @@ fun DeadlineEditScreen(
                         Text("Save")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -92,7 +96,7 @@ fun DeadlineEditScreen(
                 LamlaTextField(
                     value = state.description,
                     onValueChange = viewModel::setDescription,
-                    placeholder = "Brief notes — what to submit, where",
+                    placeholder = "Brief notes: what to submit, where",
                     singleLine = false,
                     minLines = 3,
                     maxLines = 6

@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +26,7 @@ import app.lamla.domain.model.Course
 import app.lamla.domain.model.Exam
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -44,6 +46,8 @@ fun ExamModeScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Exam mode", style = MaterialTheme.typography.titleMedium) },
@@ -51,7 +55,7 @@ fun ExamModeScreen(
                 actions = {
                     Switch(checked = state.examModeOn, onCheckedChange = { viewModel.toggleExamMode(it) })
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         },
         floatingActionButton = {
@@ -68,14 +72,14 @@ fun ExamModeScreen(
                 EmptyState(
                     title = "No exams scheduled.",
                     body = "Add exams to get countdowns and a revision plan.",
-                    icon = Icons.Outlined.LibraryBooks,
+                    icon = Icons.AutoMirrored.Outlined.LibraryBooks,
                     action = { LamlaButton(label = "Add exam", leadingIcon = Icons.Outlined.Add, onClick = onAddExam) }
                 )
             }
             return@Scaffold
         }
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(MaterialTheme.lamla.spacing.gutter),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -94,7 +98,12 @@ private fun ExamCard(exam: Exam, course: Course?) {
     val examDate = remember(exam.examDateEpochMs) {
         Instant.ofEpochMilli(exam.examDateEpochMs).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE, d MMM · HH:mm"))
     }
-    LamlaSurface(modifier = Modifier.fillMaxWidth(), contentPadding = MaterialTheme.lamla.spacing.lg) {
+    LamlaSurface(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = MaterialTheme.lamla.spacing.lg,
+        glowColor = if (daysLeft <= 3) accent else null,
+        glowAlpha = 0.3f
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (course != null) LamlaChip(label = course.code, color = accent)
@@ -141,6 +150,8 @@ fun ExamEditScreen(
     var newTopic by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (examId == null) "New exam" else "Edit exam", style = MaterialTheme.typography.titleMedium) },
@@ -148,7 +159,7 @@ fun ExamEditScreen(
                 actions = {
                     TextButton(onClick = { scope.launch { if (viewModel.save()) onBack() } }, enabled = state.canSave) { Text("Save") }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->

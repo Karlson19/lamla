@@ -10,7 +10,7 @@ import app.lamla.domain.model.OfficeHourSlot
 import java.time.DayOfWeek
 
 /**
- * Room entities — pure persistence shape. Conversions to/from domain happen in
+ * Room entities - pure persistence shape. Conversions to/from domain happen in
  * mappers (see [Mappers.kt]). UI never sees these directly.
  *
  * Foreign keys cascade DELETE for child rows (deleting a course deletes its sessions,

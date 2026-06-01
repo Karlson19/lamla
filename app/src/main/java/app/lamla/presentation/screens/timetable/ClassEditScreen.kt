@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.model.Course
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -36,7 +37,7 @@ import java.util.Locale
  * Add/edit class form.
  *
  * Fields:
- *   - Course (picker — required; if none yet, deep-link to add course)
+ *   - Course (picker - required; if none yet, deep-link to add course)
  *   - Day of week (segmented chips)
  *   - Start / End time (time pickers)
  *   - Venue
@@ -59,6 +60,8 @@ fun ClassEditScreen(
     var showEnd by remember { mutableStateOf(false) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (classId == null) "New class" else "Edit class", style = MaterialTheme.typography.titleMedium) },
@@ -78,7 +81,7 @@ fun ClassEditScreen(
                     ) { Text("Save") }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = Color.Transparent
                 )
             )
         }

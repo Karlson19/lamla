@@ -27,13 +27,14 @@ import javax.inject.Inject
  * Responsibilities:
  *   1. Build a NotificationCompat with the right channel + content.
  *   2. Optionally speak the title via TTS if "voice announcements" is on.
- *   3. Apply per-course sound override if one is set and this is a class reminder.
+ *
+ * The sound itself is owned by the notification channel, so it is not set here.
  *
  * Why all this lives in onReceive (a 10-second budget):
  *   - DataStore reads are sub-ms.
  *   - TTS init is async; we fire-and-forget via [VoiceAnnouncer] which manages
  *     its own lifecycle on the application context.
- *   - We don't enqueue WorkManager here — would add latency before the user
+ *   - We don't enqueue WorkManager here - would add latency before the user
  *     hears the sound. Direct posting is the right tool for an exact-time alert.
  */
 @AndroidEntryPoint
@@ -51,7 +52,6 @@ class ReminderReceiver : BroadcastReceiver() {
         val body = intent.getStringExtra(EXTRA_BODY).orEmpty()
         val channelId = intent.getStringExtra(EXTRA_CHANNEL_ID).orEmpty()
         val stableId = intent.getIntExtra(EXTRA_STABLE_ID, 0)
-        val courseId = intent.getLongExtra(EXTRA_COURSE_ID, -1L).takeIf { it != -1L }
 
         val officeQuestions = intent.getStringExtra(EXTRA_OFFICE_QUESTIONS)
 
@@ -63,7 +63,7 @@ class ReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // Build base notification — per-course sound override resolved async below.
+        // Build the notification. Sound and importance come from the channel.
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notif)
             .setContentTitle(title)
@@ -87,25 +87,15 @@ class ReminderReceiver : BroadcastReceiver() {
 
         val pending = goAsync()
         scope.launch {
-            // Per-course sound override (class reminders only)
-            if (kind == Reminder.Kind.Class && courseId != null) {
-                val courseSoundUri = prefs.courseSound(courseId).first()
-                if (!courseSoundUri.isNullOrBlank()) {
-                    // We can't set per-notification sound on Android 8+ (channel owns sound).
-                    // But we can play a custom sound via Ringtone at this moment, and mute the
-                    // channel's default by setting CATEGORY_ALARM (already set). This is a best-effort
-                    // workaround for the spec'd "per-course override" — the right long-term answer is
-                    // a dedicated channel per course (we leave that as a Settings choice).
-                    runCatching { VoiceAnnouncer.playUri(context, android.net.Uri.parse(courseSoundUri)) }
-                }
-            }
-
-            // Voice announcement (TTS) if enabled — additive to channel sound, per spec.
-            if (prefs.voiceAnnouncements.first() && (kind == Reminder.Kind.Class || kind == Reminder.Kind.Exam)) {
-                voice.announce(title)
-            }
-
+            // Everything async lives inside this try so pending.finish() always runs,
+            // even if a DataStore read or notify() throws. Leaking the goAsync() token
+            // risks an ANR, so the finally is the one thing we never skip.
             try {
+                // Voice announcement (TTS) if enabled - additive to channel sound, per spec.
+                if (prefs.voiceAnnouncements.first() && (kind == Reminder.Kind.Class || kind == Reminder.Kind.Exam)) {
+                    voice.announce(title)
+                }
+
                 nm.notify(stableId, builder.build())
 
                 // Weekly recurrence: for recurring kinds (Class, OfficeHours), enqueue
@@ -113,7 +103,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 // up immediately after this one fires. AlarmManager's setExactAndAllowWhileIdle
                 // is single-shot, so we re-arm it ourselves rather than rely on Android.
                 //
-                // Deadlines/exams/study sessions are one-time events — no reschedule needed.
+                // Deadlines/exams/study sessions are one-time events - no reschedule needed.
                 if (kind == Reminder.Kind.Class || kind == Reminder.Kind.OfficeHours) {
                     WorkManager.getInstance(context).enqueueUniqueWork(
                         WORK_RESCHEDULE_AFTER_FIRE,

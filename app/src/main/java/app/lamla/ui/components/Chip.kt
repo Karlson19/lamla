@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import app.lamla.ui.theme.lamla
 
 /**
- * Tag/chip — used for course tags, deadline status, filters.
+ * Tag/chip - used for course tags, deadline status, filters.
  *
  * Pill-shaped (the one place pills are right). When [color] is provided (a
  * course's accent), the chip becomes a colored dot + label. When not, it's

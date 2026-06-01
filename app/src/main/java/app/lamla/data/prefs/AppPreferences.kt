@@ -17,13 +17,13 @@ private val Context.dataStore by preferencesDataStore(name = "lamla_prefs")
 /**
  * App preferences (DataStore Preferences).
  *
- * Only stores things that are *user choice* — not derived state. Everything
+ * Only stores things that are *user choice* - not derived state. Everything
  * else lives in Room.
  *
  * Per-channel sound URIs are stored as plain strings (uri.toString()) keyed by
  * channel id. Defaults to null = use channel's bundled default.
  *
- * Per-course sound overrides are keyed `courseSound::<courseId>` — DataStore
+ * Per-course sound overrides are keyed `courseSound::<courseId>` - DataStore
  * gives us no nested maps; this stays simple and migrates well.
  */
 @Singleton
@@ -41,8 +41,6 @@ class AppPreferences @Inject constructor(
         val pomodoroLongBreakMin = intPreferencesKey("pomodoro_long_break_min")
         val pomodoroCyclesUntilLong = intPreferencesKey("pomodoro_cycles")
         val batteryGuideShown = booleanPreferencesKey("battery_guide_shown")
-        fun channelSound(channelId: String) = stringPreferencesKey("channel_sound::$channelId")
-        fun courseSound(courseId: Long) = stringPreferencesKey("course_sound::$courseId")
         val lastRescheduleAt = androidx.datastore.preferences.core.longPreferencesKey("last_reschedule_at")
         val lastBootAt = androidx.datastore.preferences.core.longPreferencesKey("last_boot_at")
     }
@@ -62,8 +60,8 @@ class AppPreferences @Inject constructor(
     /**
      * Display name shown in the home greeting ("Good morning, Karlson").
      *
-     * Optional — defaults to empty string. When blank, the UI falls back to
-     * a name-less greeting. Locally stored, never sent anywhere — this is *not*
+     * Optional - defaults to empty string. When blank, the UI falls back to
+     * a name-less greeting. Locally stored, never sent anywhere - this is *not*
      * an account, just a preference.
      */
     val userName: Flow<String> = context.dataStore.data.map { it[Keys.userName].orEmpty() }
@@ -99,25 +97,9 @@ class AppPreferences @Inject constructor(
         context.dataStore.edit { it[Keys.batteryGuideShown] = value }
     }
 
-    fun channelSound(channelId: String): Flow<String?> =
-        context.dataStore.data.map { it[Keys.channelSound(channelId)] }
-    suspend fun setChannelSound(channelId: String, uri: String?) {
-        context.dataStore.edit { p ->
-            if (uri == null) p.remove(Keys.channelSound(channelId)) else p[Keys.channelSound(channelId)] = uri
-        }
-    }
-
-    fun courseSound(courseId: Long): Flow<String?> =
-        context.dataStore.data.map { it[Keys.courseSound(courseId)] }
-    suspend fun setCourseSound(courseId: Long, uri: String?) {
-        context.dataStore.edit { p ->
-            if (uri == null) p.remove(Keys.courseSound(courseId)) else p[Keys.courseSound(courseId)] = uri
-        }
-    }
-
     /**
      * Telemetry timestamps for the in-app Diagnostics screen.
-     * Local-only — never sent anywhere. Lets the user see "yes, the daily worker
+     * Local-only - never sent anywhere. Lets the user see "yes, the daily worker
      * really did run last night at 03:14" without having to trust a code review.
      */
     val lastRescheduleAt: Flow<Long> = context.dataStore.data.map { it[Keys.lastRescheduleAt] ?: 0L }
@@ -130,6 +112,6 @@ class AppPreferences @Inject constructor(
         context.dataStore.edit { it[Keys.lastBootAt] = ts }
     }
 
-    /** One-shot snapshot (use sparingly — prefer Flow observation). */
+    /** One-shot snapshot (use sparingly - prefer Flow observation). */
     suspend fun snapshot(): Preferences = context.dataStore.data.first()
 }

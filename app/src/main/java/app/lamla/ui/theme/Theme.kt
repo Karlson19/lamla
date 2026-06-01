@@ -22,13 +22,13 @@ import androidx.core.view.WindowCompat
  * Themes. Picked by the user, never auto-imposed.
  *
  * Neutral set:
- * - [System]      — follows the device dark-mode setting (default).
- * - [Light]       — warm ivory + ink, gold accent.
- * - [Dark]        — cool obsidian + snow, gold accent.
- * - [Gold]        — light variant where the accent dominates more strongly (KNUST campus feel).
- * - [Monochrome]  — accent collapses to ink/snow, for users who want zero color noise.
+ * - [System]      - follows the device dark-mode setting (default).
+ * - [Light]       - warm ivory + ink, gold accent.
+ * - [Dark]        - cool obsidian + snow, gold accent.
+ * - [Gold]        - light variant where the accent dominates more strongly (KNUST campus feel).
+ * - [Monochrome]  - accent collapses to ink/snow, for users who want zero color noise.
  *
- * Vibrant set — each adapts to light & dark automatically via the system setting:
+ * Vibrant set - each adapts to light & dark automatically via the system setting:
  * - [Indigo] [Emerald] [Teal] [Ocean] [Sunset] [Crimson] [Rose] [Lavender] [Plum]
  *
  * Every vibrant accent uses a 600-700-level primary in light mode (white text) and a
@@ -94,6 +94,8 @@ fun LamlaTheme(
         else -> (if (dark) DarkExtendedColors else LightExtendedColors).copy(timelineNow = colorScheme.primary)
     }
 
+    val gradients = gradientsFor(dark)
+
     // System bars: transparent, with correct icon contrast.
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -111,7 +113,8 @@ fun LamlaTheme(
         LocalLamlaColors provides extended,
         LocalLamlaSpacing provides Spacing,
         LocalLamlaMotion provides Motion,
-        LocalLamlaElevation provides Elevation
+        LocalLamlaElevation provides Elevation,
+        LocalLamlaGradients provides gradients
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -122,7 +125,7 @@ fun LamlaTheme(
     }
 }
 
-// region — Material 3 ColorScheme definitions ----------------------------------
+// region - Material 3 ColorScheme definitions ----------------------------------
 
 private val LightScheme: ColorScheme = lightColorScheme(
     primary = Palette.Ink,
@@ -206,7 +209,7 @@ private val DarkScheme: ColorScheme = darkColorScheme(
     scrim = Color(0xCC000000)
 )
 
-/** Gold theme — same warm light base but the accent is foregrounded more (chips, headers). */
+/** Gold theme - same warm light base but the accent is foregrounded more (chips, headers). */
 private val GoldScheme: ColorScheme = LightScheme.copy(
     primary = Palette.GoldDeep,
     onPrimary = Palette.Ivory,
@@ -235,8 +238,19 @@ private val MonoDarkScheme: ColorScheme = DarkScheme.copy(
 )
 
 // -- Vibrant themes ------------------------------------------------------------
-// Each is the neutral Light/Dark scheme with the accent slots swapped. Surfaces
-// stay near-neutral so content reads cleanly; the accent carries the personality.
+// Each is the neutral Light/Dark scheme with the accent slots swapped AND every
+// surface given a faint wash of the accent hue. The wash is what makes the themes
+// read as distinct at a glance - without it, switching palettes only re-tints the
+// handful of `primary`-colored elements and the screen looks unchanged. Text stays
+// ink/snow and the wash is gentle (3–14%), so contrast never drops below AA.
+
+/** Linear blend from this color toward [accent] by [amount] (0f..1f). Opaque result. */
+private fun Color.mix(accent: Color, amount: Float): Color = Color(
+    red = red + (accent.red - red) * amount,
+    green = green + (accent.green - green) * amount,
+    blue = blue + (accent.blue - blue) * amount,
+    alpha = 1f
+)
 
 private fun accentLight(primary: Color, onPrimary: Color, container: Color, onContainer: Color): ColorScheme =
     LightScheme.copy(
@@ -246,7 +260,17 @@ private fun accentLight(primary: Color, onPrimary: Color, container: Color, onCo
         secondaryContainer = container, onSecondaryContainer = onContainer,
         tertiary = primary, onTertiary = onPrimary,
         tertiaryContainer = container, onTertiaryContainer = onContainer,
-        surfaceTint = primary
+        surfaceTint = primary,
+        // Accent wash across the neutral surfaces so the palette is unmistakable.
+        background = Palette.Ivory.mix(primary, 0.04f),
+        surface = Palette.Ivory.mix(primary, 0.04f),
+        surfaceVariant = Palette.Bone.mix(primary, 0.08f),
+        surfaceContainerLowest = Palette.Ivory.mix(primary, 0.03f),
+        surfaceContainerLow = Color(0xFFF7F6F1).mix(primary, 0.06f),
+        surfaceContainer = Palette.Bone.mix(primary, 0.09f),
+        surfaceContainerHigh = Color(0xFFEEEDE7).mix(primary, 0.11f),
+        surfaceContainerHighest = Palette.Linen.mix(primary, 0.13f),
+        outlineVariant = Palette.Bone.mix(primary, 0.20f)
     )
 
 private fun accentDark(primary: Color, onPrimary: Color, container: Color, onContainer: Color): ColorScheme =
@@ -257,7 +281,18 @@ private fun accentDark(primary: Color, onPrimary: Color, container: Color, onCon
         secondaryContainer = container, onSecondaryContainer = onContainer,
         tertiary = primary, onTertiary = onPrimary,
         tertiaryContainer = container, onTertiaryContainer = onContainer,
-        surfaceTint = primary
+        surfaceTint = primary,
+        // Dark accents are light (300-level), so a small mix tints the near-black
+        // surfaces toward the hue while keeping them dark and the text legible.
+        background = Palette.Obsidian.mix(primary, 0.06f),
+        surface = Palette.Obsidian.mix(primary, 0.06f),
+        surfaceVariant = Palette.Charcoal.mix(primary, 0.10f),
+        surfaceContainerLowest = Color(0xFF06060A).mix(primary, 0.05f),
+        surfaceContainerLow = Color(0xFF0F0F14).mix(primary, 0.08f),
+        surfaceContainer = Palette.Charcoal.mix(primary, 0.10f),
+        surfaceContainerHigh = Color(0xFF17171D).mix(primary, 0.12f),
+        surfaceContainerHighest = Palette.Onyx.mix(primary, 0.14f),
+        outlineVariant = Palette.Charcoal.mix(primary, 0.22f)
     )
 
 private val IndigoLight   = accentLight(Color(0xFF4F46E5), Color.White, Color(0xFFE0E0FF), Color(0xFF1E1B4B))
@@ -332,10 +367,10 @@ private fun animateColorScheme(target: ColorScheme, spec: AnimationSpec<Color>):
 
 // endregion
 
-// region — Extended (non-Material) color tokens --------------------------------
+// region - Extended (non-Material) color tokens --------------------------------
 
 /**
- * Tokens that don't fit Material 3's slots — stress score bands, course tag tints,
+ * Tokens that don't fit Material 3's slots - stress score bands, course tag tints,
  * hairline border colors. Exposed via [LocalLamlaColors] / [MaterialTheme.lamla].
  */
 data class LamlaColors(
@@ -349,7 +384,7 @@ data class LamlaColors(
     val timelineNow: Color,
     val tabularDigits: Color
 ) {
-    /** Strip semantic colors for the Monochrome theme — everything becomes ink/snow + tonal. */
+    /** Strip semantic colors for the Monochrome theme - everything becomes ink/snow + tonal. */
     fun asMonochrome(): LamlaColors = copy(
         stressChill = hairlineStrong,
         stressSteady = hairlineStrong,
@@ -391,7 +426,7 @@ internal val LocalLamlaColors = staticCompositionLocalOf { LightExtendedColors }
 
 // endregion
 
-// region — CompositionLocal entrypoint -----------------------------------------
+// region - CompositionLocal entrypoint -----------------------------------------
 
 /**
  * Convenience accessor: `MaterialTheme.lamla.colors.stressCrunch`, etc.
@@ -404,6 +439,7 @@ object MaterialThemeExt {
     val spacing: LamlaSpacing @Composable get() = LocalLamlaSpacing.current
     val motion: LamlaMotion @Composable get() = LocalLamlaMotion.current
     val elevation: LamlaElevation @Composable get() = LocalLamlaElevation.current
+    val gradients: LamlaGradients @Composable get() = LocalLamlaGradients.current
 }
 
 @Suppress("UnusedReceiverParameter")

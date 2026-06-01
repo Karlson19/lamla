@@ -28,7 +28,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * "TODAY — N classes / M deadlines" summary widget.
+ * "TODAY - N classes / M deadlines" summary widget.
  */
 class TodaySummaryWidget : GlanceAppWidget() {
 

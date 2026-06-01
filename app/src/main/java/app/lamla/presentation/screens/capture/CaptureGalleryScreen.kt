@@ -1,6 +1,5 @@
 package app.lamla.presentation.screens.capture
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -19,6 +19,7 @@ import app.lamla.domain.model.CaptureType
 import app.lamla.ui.components.EmptyState
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.SectionLabel
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import java.time.Instant
 import java.time.ZoneId
@@ -35,11 +36,13 @@ fun CaptureGalleryScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Captures", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -50,7 +53,7 @@ fun CaptureGalleryScreen(
             return@Scaffold
         }
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(MaterialTheme.lamla.spacing.gutter),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

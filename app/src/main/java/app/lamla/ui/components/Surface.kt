@@ -24,17 +24,19 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.scale
+import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
+import app.lamla.ui.theme.softElevation
 
 /**
  * Foundation surface for cards, sheets, list rows.
  *
  * Two principles:
  *   1. Differentiate surfaces by **bg tint + 1dp border**, not shadow. The border
- *      is what gives a card its edge on the off-white/ink background — shadows
+ *      is what gives a card its edge on the off-white/ink background - shadows
  *      look wrong on warm-neutral palettes.
  *   2. If clickable, animate a subtle press scale (0.98) + tint shift. No ripple
- *      flash — too loud for this design language.
+ *      flash - too loud for this design language.
  *
  * Use over [androidx.compose.material3.Card] when you want a non-clickable surface
  * or want to opt out of Material's elevation tonal-tint behavior.
@@ -47,6 +49,11 @@ fun LamlaSurface(
     borderWidth: Dp = 1.dp,
     cornerRadius: Dp = MaterialTheme.lamla.spacing.cornerMd,
     contentPadding: Dp = MaterialTheme.lamla.spacing.lg,
+    /** Soft neutral lift. Reach for it on cards that should float above the page. */
+    elevated: Boolean = false,
+    /** Colored halo. Reach for it on hero / "live" surfaces that should feel lit. */
+    glowColor: Color? = null,
+    glowAlpha: Float = 0.45f,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
@@ -67,6 +74,13 @@ fun LamlaSurface(
 
     val base = modifier
         .scale(scale)
+        .then(
+            when {
+                glowColor != null -> Modifier.glow(glowColor, shape, radius = 20.dp, alpha = glowAlpha)
+                elevated -> Modifier.softElevation(shape, radius = 14.dp)
+                else -> Modifier
+            }
+        )
         .clip(shape)
         .background(bg, shape)
         .border(BorderStroke(borderWidth, borderColor), shape)

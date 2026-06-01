@@ -19,7 +19,7 @@ import dagger.assisted.AssistedInject
  *   - Manual "Run reschedule now" from Settings → Diagnostics (input: trigger=manual)
  *
  * Always writes lastRescheduleAt on success. When trigger=boot, also writes
- * lastBootAt — so the Diagnostics screen can show the user "the boot receiver
+ * lastBootAt - so the Diagnostics screen can show the user "the boot receiver
  * really did fire after your phone rebooted on Friday."
  *
  * Cost: ~one DB-wide read pass + N scheduler.schedule() IPC calls. Cheap.

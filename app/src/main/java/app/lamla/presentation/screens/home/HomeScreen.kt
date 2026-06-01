@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.EventNote
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
@@ -30,20 +32,27 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.usecase.StressScore
 import app.lamla.domain.usecase.TodayFlow
+import app.lamla.presentation.enqueueExactAlarmReschedule
+import app.lamla.presentation.openAppNotificationSettings
+import app.lamla.presentation.openExactAlarmSettings
+import app.lamla.presentation.rememberExactAlarmAllowed
+import app.lamla.presentation.rememberNotificationsAllowed
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
+import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
 /**
- * Home — "Today".
+ * Home - "Today".
  *
  * Layout, top-to-bottom:
  *   1. Editorial header: greeting + dateline
  *   2. Stress score card (tappable → bottom-sheet breakdown)
- *   3. Today's flow timeline (chronological — classes, deadlines, study blocks interleaved)
+ *   3. Today's flow timeline (chronological - classes, deadlines, study blocks interleaved)
  *   4. Floating "+" capture FAB (lives in scaffold; sheet handled here)
  *
  * Why no separate "Next class" giant card: the next class is naturally the first
@@ -54,7 +63,6 @@ import java.util.Locale
 @Composable
 fun HomeScreen(
     onOpenDeadlines: () -> Unit,
-    onOpenLecturers: () -> Unit,
     onAddCapture: () -> Unit,
     onClassClick: (Long) -> Unit,
     onDeadlineClick: (Long) -> Unit,
@@ -67,12 +75,29 @@ fun HomeScreen(
     var showBreakdown by rememberSaveable { mutableStateOf(false) }
     var showCaptureSheet by rememberSaveable { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+    // If the OS is blocking notifications, reminders silently never arrive, so we
+    // surface a one-tap fix at the very top of the page. Re-checked on resume.
+    val notificationsAllowed = rememberNotificationsAllowed()
+    // On Android 12+, without exact-alarm access reminders downgrade to inexact and
+    // can fire minutes late. Same one-tap fix, and the moment access flips on we
+    // re-arm every queued alarm so they upgrade to exact without waiting for a restart.
+    val exactAlarmsAllowed = rememberExactAlarmAllowed()
+    var exactAlarmsWereAllowed by rememberSaveable { mutableStateOf(exactAlarmsAllowed) }
+    LaunchedEffect(exactAlarmsAllowed) {
+        if (exactAlarmsAllowed && !exactAlarmsWereAllowed) context.enqueueExactAlarmReschedule()
+        exactAlarmsWereAllowed = exactAlarmsAllowed
+    }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            // Warm aura blooming from the top, behind the greeting. Fixed to the
+            // screen so it stays put as the timeline scrolls beneath it.
+            .auroraBackdrop()
+    ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = MaterialTheme.lamla.spacing.gutter,
                 end = MaterialTheme.lamla.spacing.gutter,
@@ -81,6 +106,20 @@ fun HomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            if (!notificationsAllowed) {
+                item {
+                    NotificationsOffBanner(onEnable = { context.openAppNotificationSettings() })
+                }
+            }
+
+            // Only nudge about exact alarms when notifications themselves are on -
+            // otherwise the notification banner is the more important fix to show first.
+            if (notificationsAllowed && !exactAlarmsAllowed) {
+                item {
+                    ExactAlarmsOffBanner(onEnable = { context.openExactAlarmSettings() })
+                }
+            }
+
             item {
                 HomeHeader(
                     greeting = state.greeting,
@@ -97,6 +136,25 @@ fun HomeScreen(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         showBreakdown = true
                     }
+                )
+            }
+
+            item {
+                val due = state.deadlinesDueThisWeek
+                LamlaNavRow(
+                    icon = Icons.AutoMirrored.Outlined.EventNote,
+                    title = "Deadlines",
+                    subtitle = when (due) {
+                        0 -> "Nothing due in the next 7 days"
+                        1 -> "1 due in the next 7 days"
+                        else -> "$due due in the next 7 days"
+                    },
+                    // Light up in the "crunch" hue only when something is actually due,
+                    // so the row stays calm on a clear week and pulls focus when it matters.
+                    accent = if (due > 0) MaterialTheme.lamla.colors.stressCrunch
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    badge = if (due > 0) "$due" else null,
+                    onClick = onOpenDeadlines
                 )
             }
 
@@ -129,7 +187,7 @@ fun HomeScreen(
             }
         }
 
-        // Floating quick-capture button — bottom-right, floats above the nav.
+        // Floating quick-capture button - bottom-right, floats above the nav.
         QuickCaptureFab(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -175,11 +233,15 @@ private fun currentNowMinutes(): Int =
     java.time.LocalTime.now().toSecondOfDay() / 60
 
 @Composable
-private fun HomeHeader(greeting: String, userName: String, today: java.time.LocalDate) {
+private fun HomeHeader(
+    greeting: String,
+    userName: String,
+    today: java.time.LocalDate
+) {
     val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val date = today.format(DateTimeFormatter.ofPattern("d MMM"))
     // "Good morning, Karlson" if we know the name; just "Good morning" otherwise.
-    // We avoid trailing punctuation either way — that's tone, not data.
+    // We avoid trailing punctuation either way - that's tone, not data.
     val headline = if (userName.isNotBlank()) "$greeting, $userName" else greeting
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
@@ -191,6 +253,105 @@ private fun HomeHeader(greeting: String, userName: String, today: java.time.Loca
             text = headline,
             style = MaterialTheme.typography.displaySmall,
             color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+/**
+ * Shown only when the OS is blocking notifications. A warm, ember-lit card so it
+ * reads as "act on this" without feeling like a hard error; tapping it opens the
+ * system notification settings for the app.
+ */
+@Composable
+private fun NotificationsOffBanner(onEnable: () -> Unit) {
+    val ember = MaterialTheme.lamla.gradients.emberGlow
+    val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerLg)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .glow(ember, shape, radius = 14.dp, alpha = 0.32f)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
+            .border(1.dp, ember.copy(alpha = 0.5f), shape)
+            .clickable(onClick = onEnable)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.NotificationsOff,
+            contentDescription = null,
+            tint = ember,
+            modifier = Modifier.size(22.dp)
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = "Notifications are off",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Reminders can't reach you until you turn them on.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = "Turn on",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = ember
+        )
+    }
+}
+
+@Composable
+private fun ExactAlarmsOffBanner(onEnable: () -> Unit) {
+    val ember = MaterialTheme.lamla.gradients.emberGlow
+    val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerLg)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .glow(ember, shape, radius = 14.dp, alpha = 0.32f)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
+            .border(1.dp, ember.copy(alpha = 0.5f), shape)
+            .clickable(onClick = onEnable)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Alarm,
+            contentDescription = null,
+            tint = ember,
+            modifier = Modifier.size(22.dp)
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = "Reminders may arrive late",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Allow exact alarms so class and exam alerts fire on the minute.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = "Allow",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = ember
         )
     }
 }
@@ -350,6 +511,10 @@ private fun ClassCard(
         onClick = { onClick(item.session.id) },
         color = if (isHappeningNow) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surface,
         borderColor = if (isHappeningNow) accent.copy(alpha = 0.4f) else MaterialTheme.lamla.colors.hairline,
+        // The class happening right now glows in its course color, so it reads as
+        // the one "live" surface on the page.
+        glowColor = if (isHappeningNow) accent else null,
+        glowAlpha = 0.32f,
         contentPadding = MaterialTheme.lamla.spacing.md
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -498,19 +663,22 @@ private fun QuickCaptureFab(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val cs = MaterialTheme.colorScheme
+    val gradients = MaterialTheme.lamla.gradients
     Box(
         modifier = modifier
             .size(56.dp)
+            // Ember fill + matching halo: the capture button is the one warm, lit
+            // call to action floating over the page.
+            .glow(gradients.emberGlow, CircleShape, radius = 16.dp, alpha = 0.5f)
             .clip(CircleShape)
-            .background(cs.onSurface, CircleShape)
+            .background(gradients.emberLinear, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Outlined.Add,
             contentDescription = "Quick capture",
-            tint = cs.surface,
+            tint = Color.White,
             modifier = Modifier.size(22.dp)
         )
     }

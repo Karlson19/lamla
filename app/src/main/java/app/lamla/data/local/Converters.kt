@@ -15,7 +15,7 @@ import java.time.DayOfWeek
  * All custom types persist via kotlinx-serialization JSON. Cheaper than wiring
  * Moshi/Gson, and we already have it for export/import.
  *
- * Enums via name() — not ordinal, which would silently re-map on reorder.
+ * Enums via name() - not ordinal, which would silently re-map on reorder.
  */
 class Converters {
 

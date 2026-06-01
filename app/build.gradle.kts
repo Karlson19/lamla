@@ -18,7 +18,7 @@ plugins {
  *   keyAlias=...
  *   keyPassword=...
  *
- * Falls back to debug signing if the file is missing — that way local debug
+ * Falls back to debug signing if the file is missing - that way local debug
  * builds work without setup, but release builds will fail unsigned (the way
  * we want, so we never ship something unsigned by accident).
  *
@@ -39,8 +39,8 @@ android {
         applicationId = "app.lamla"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -76,7 +76,7 @@ android {
             )
             // Use release signing if configured; otherwise fall back to debug for local
             // sanity testing (a CI build without secrets will produce an unsigned APK,
-            // which gradle will refuse to install — surfacing the misconfig early).
+            // which gradle will refuse to install - surfacing the misconfig early).
             signingConfig = signingConfigs.findByName("release")
                 ?.takeIf { it.storeFile?.exists() == true }
                 ?: signingConfigs.getByName("debug")

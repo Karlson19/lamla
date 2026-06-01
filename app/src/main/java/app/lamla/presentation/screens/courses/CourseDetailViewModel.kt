@@ -2,6 +2,7 @@ package app.lamla.presentation.screens.courses
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.lamla.data.repo.CaptureRepository
 import app.lamla.data.repo.CourseRepository
 import app.lamla.data.repo.DeadlineRepository
 import app.lamla.data.repo.LecturerRepository
@@ -21,7 +22,8 @@ data class CourseDetailUiState(
     val course: Course? = null,
     val lecturerName: String? = null,
     val deadlines: List<Deadline> = emptyList(),
-    val minutesThisWeek: Int = 0
+    val minutesThisWeek: Int = 0,
+    val captureCount: Int = 0
 )
 
 @HiltViewModel
@@ -29,7 +31,8 @@ class CourseDetailViewModel @Inject constructor(
     private val courseRepo: CourseRepository,
     private val lecturerRepo: LecturerRepository,
     private val deadlineRepo: DeadlineRepository,
-    private val studyRepo: StudySessionRepository
+    private val studyRepo: StudySessionRepository,
+    private val captureRepo: CaptureRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CourseDetailUiState())
@@ -42,8 +45,15 @@ class CourseDetailViewModel @Inject constructor(
             val deadlines = deadlineRepo.observeForCourse(courseId).first()
             val weekAgo = System.currentTimeMillis() - 7L * 24 * 60 * 60_000
             val mins = studyRepo.observeMinutesPerCourse(weekAgo, System.currentTimeMillis()).first()[courseId] ?: 0
+            val captures = captureRepo.observeForCourse(courseId).first().size
             _state.update {
-                it.copy(course = course, lecturerName = lecturer?.name, deadlines = deadlines, minutesThisWeek = mins)
+                it.copy(
+                    course = course,
+                    lecturerName = lecturer?.name,
+                    deadlines = deadlines,
+                    minutesThisWeek = mins,
+                    captureCount = captures
+                )
             }
         }
     }

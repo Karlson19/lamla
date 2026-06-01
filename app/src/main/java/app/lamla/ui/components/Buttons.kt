@@ -25,22 +25,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
 
 /**
  * Button variants.
  *
  * Linear-flavoured: small, restrained, no pill shapes. Three intents:
- *   - [LamlaButton]         — primary action (filled, ink/snow background)
- *   - [LamlaSecondaryButton]— secondary action (subtle tonal container)
- *   - [LamlaGhostButton]    — tertiary, walks-away action (text only, no bg)
+ *   - [LamlaButton]         - primary action (filled, ink/snow background)
+ *   - [LamlaSecondaryButton]- secondary action (subtle tonal container)
+ *   - [LamlaGhostButton]    - tertiary, walks-away action (text only, no bg)
  *
- * All animate scale 0.97 on press + tonal shift. No ripple — too splashy for
+ * All animate scale 0.97 on press + tonal shift. No ripple - too splashy for
  * this language. Haptic tick lives in callers via [androidx.compose.ui.hapticfeedback].
  */
 
@@ -120,12 +122,17 @@ private fun BaseButton(
     variant: ButtonVariant
 ) {
     val cs = MaterialTheme.colorScheme
+    // Primary is the ember gradient (white text reads on the warm fill in both
+    // light and dark). The rest stay solid/tonal.
     val (bg, fg, border) = when (variant) {
-        ButtonVariant.Primary -> Triple(cs.primary, cs.onPrimary, Color.Transparent)
+        ButtonVariant.Primary -> Triple(cs.primary, Color.White, Color.Transparent)
         ButtonVariant.Secondary -> Triple(cs.surfaceContainer, cs.onSurface, MaterialTheme.lamla.colors.hairline)
         ButtonVariant.Ghost -> Triple(Color.Transparent, cs.onSurface, Color.Transparent)
         ButtonVariant.Destructive -> Triple(cs.errorContainer, cs.onErrorContainer, Color.Transparent)
     }
+    val isPrimary = variant == ButtonVariant.Primary
+    val brush = if (isPrimary) MaterialTheme.lamla.gradients.emberLinear else null
+    val glowColor = MaterialTheme.lamla.gradients.emberGlow
 
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -141,14 +148,24 @@ private fun BaseButton(
         animationSpec = MaterialTheme.lamla.motion.tweenStandard(MaterialTheme.lamla.motion.short3),
         label = "btn-bg"
     )
+    val layerAlpha by animateFloatAsState(
+        targetValue = if (!enabled) 0.45f else if (pressed) 0.9f else 1f,
+        animationSpec = MaterialTheme.lamla.motion.tweenStandard(MaterialTheme.lamla.motion.short3),
+        label = "btn-alpha"
+    )
 
     val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerSm)
 
     Box(
         modifier = modifier
             .scale(scale)
+            .then(if (isPrimary && enabled) Modifier.glow(glowColor, shape, radius = 13.dp, alpha = 0.42f) else Modifier)
+            .alpha(layerAlpha)
             .clip(shape)
-            .background(animatedBg, shape)
+            .then(
+                if (brush != null) Modifier.background(brush, shape)
+                else Modifier.background(animatedBg, shape)
+            )
             .then(
                 if (border != Color.Transparent)
                     Modifier.border(BorderStroke(1.dp, border), shape)

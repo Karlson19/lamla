@@ -32,6 +32,8 @@ import app.lamla.domain.model.ClassSession
 import app.lamla.domain.model.Course
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
+import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -44,7 +46,7 @@ import java.util.Locale
  *
  * Two coordinated views:
  *   - Top: horizontal day-of-week tab strip (Mon, Tue, ..., Sun). Tappable + swipeable.
- *   - Body: HorizontalPager — one full-day list per page. Each row is a class card.
+ *   - Body: HorizontalPager - one full-day list per page. Each row is a class card.
  *
  * Why a pager (not just a "selected day" filter): swipe gesture between days is
  * a high-value affordance students expect on calendar surfaces. Compose's
@@ -71,7 +73,7 @@ fun TimetableScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .auroraBackdrop()
         ) {
             // Header
             ScreenHeader(
@@ -109,17 +111,25 @@ fun TimetableScreen(
             }
         }
 
-        // Add button
-        SmallFloatingActionButton(
-            onClick = onAddClass,
-            containerColor = MaterialTheme.colorScheme.onSurface,
-            contentColor = MaterialTheme.colorScheme.surface,
-            shape = androidx.compose.foundation.shape.CircleShape,
+        // Add button: ember fill + warm halo, matching Home's capture action.
+        val gradients = MaterialTheme.lamla.gradients
+        Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = MaterialTheme.lamla.spacing.gutter, bottom = 96.dp)
+                .size(48.dp)
+                .glow(gradients.emberGlow, androidx.compose.foundation.shape.CircleShape, radius = 15.dp, alpha = 0.5f)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(gradients.emberLinear, androidx.compose.foundation.shape.CircleShape)
+                .clickable(onClick = onAddClass),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Outlined.Add, contentDescription = "Add class")
+            Icon(
+                Icons.Outlined.Add,
+                contentDescription = "Add class",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

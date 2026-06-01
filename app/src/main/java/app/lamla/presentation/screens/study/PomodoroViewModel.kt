@@ -3,6 +3,8 @@ package app.lamla.presentation.screens.study
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.lamla.data.prefs.AppPreferences
+import app.lamla.data.repo.StudySessionRepository
+import app.lamla.domain.model.StudySession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import javax.inject.Inject
 
 enum class PomoPhase { Focus, ShortBreak, LongBreak }
@@ -39,7 +42,8 @@ data class PomodoroUiState(
 
 @HiltViewModel
 class PomodoroViewModel @Inject constructor(
-    private val prefs: AppPreferences
+    private val prefs: AppPreferences,
+    private val studyRepo: StudySessionRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PomodoroUiState())
@@ -104,6 +108,15 @@ class PomodoroViewModel @Inject constructor(
     }
 
     private fun advancePhase() {
+        // Record the focused minutes that just elapsed before we roll into the next
+        // phase. Covers both natural completion and a mid-focus Skip - only whole
+        // minutes of >= 1 are persisted so the StudyHub "This week" chart reflects
+        // real focus time. Breaks are never recorded.
+        val prev = _state.value
+        if (prev.phase == PomoPhase.Focus) {
+            val elapsedMin = ((prev.totalSeconds - prev.remainingSeconds) / 60.0).roundToInt()
+            if (elapsedMin >= 1) recordFocusSession(elapsedMin)
+        }
         _state.update {
             val nextPhase: PomoPhase
             val nextCompleted: Int
@@ -134,5 +147,21 @@ class PomodoroViewModel @Inject constructor(
         PomoPhase.Focus -> s.focusMin * 60
         PomoPhase.ShortBreak -> s.shortBreakMin * 60
         PomoPhase.LongBreak -> s.longBreakMin * 60
+    }
+
+    /** Persist a completed focus block so study-time charts/totals stay truthful. */
+    private fun recordFocusSession(minutes: Int) {
+        val now = System.currentTimeMillis()
+        viewModelScope.launch {
+            studyRepo.upsert(
+                StudySession(
+                    courseId = null,
+                    scheduledStartEpochMs = now - minutes * 60_000L,
+                    scheduledEndEpochMs = now,
+                    actualMinutesStudied = minutes,
+                    completedAtEpochMs = now
+                )
+            )
+        }
     }
 }

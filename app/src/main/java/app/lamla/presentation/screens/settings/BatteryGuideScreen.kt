@@ -7,18 +7,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.lamla.notifications.OemBatteryGuide
 import app.lamla.ui.components.LamlaButton
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,11 +32,13 @@ fun BatteryGuideScreen(onBack: () -> Unit) {
     val isOptimized = remember { mutableStateOf(!OemBatteryGuide.isBatteryOptimizationIgnored(context)) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Battery optimization", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -69,7 +73,7 @@ fun BatteryGuideScreen(onBack: () -> Unit) {
 
             LamlaButton(
                 label = "Open settings",
-                leadingIcon = Icons.Outlined.OpenInNew,
+                leadingIcon = Icons.AutoMirrored.Outlined.OpenInNew,
                 onClick = { OemBatteryGuide.openSettings(context, manufacturer) },
                 modifier = Modifier.fillMaxWidth()
             )

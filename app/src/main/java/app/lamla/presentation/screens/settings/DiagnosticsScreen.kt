@@ -18,10 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.usecase.UpcomingAlarms
+import app.lamla.presentation.openExactAlarmSettings
 import app.lamla.ui.components.LamlaButton
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import java.time.Instant
 import java.time.LocalDate
@@ -40,7 +42,7 @@ import java.time.format.DateTimeFormatter
  *   3. "What reminders are actually queued up?"            → upcoming list
  *
  * Plus a "Run reschedule now" button so they can force-trigger the worker and
- * watch the timestamp update — proves the wiring works in <2 seconds, no
+ * watch the timestamp update - proves the wiring works in <2 seconds, no
  * waiting around for the daily tick.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +52,10 @@ fun DiagnosticsScreen(
     viewModel: DiagnosticsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Diagnostics", style = MaterialTheme.typography.titleMedium) },
@@ -60,7 +65,7 @@ fun DiagnosticsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -68,8 +73,7 @@ fun DiagnosticsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .background(MaterialTheme.colorScheme.background),
+                .padding(padding),
             contentPadding = PaddingValues(
                 start = MaterialTheme.lamla.spacing.gutter,
                 end = MaterialTheme.lamla.spacing.gutter,
@@ -80,7 +84,7 @@ fun DiagnosticsScreen(
             item {
                 Text(
                     text = "What the reminder system is doing right now. " +
-                        "If anything looks wrong, tap \"Run reschedule now\" — the timestamp should tick within a second.",
+                        "If anything looks wrong, tap \"Run reschedule now\". The timestamp should tick within a second.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -92,7 +96,7 @@ fun DiagnosticsScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         HealthRow(
                             label = "Exact alarms",
-                            value = if (state.canScheduleExact) "Allowed" else "Denied — grant in system settings",
+                            value = if (state.canScheduleExact) "Allowed" else "Denied. Tap below to fix",
                             ok = state.canScheduleExact
                         )
                         HealthRow(
@@ -115,6 +119,17 @@ fun DiagnosticsScreen(
                 }
             }
 
+            if (!state.canScheduleExact) {
+                item {
+                    LamlaButton(
+                        label = "Allow exact alarms",
+                        leadingIcon = Icons.Outlined.Alarm,
+                        onClick = { context.openExactAlarmSettings() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
             item {
                 LamlaButton(
                     label = "Run reschedule now",
@@ -129,7 +144,7 @@ fun DiagnosticsScreen(
             if (state.upcoming.isEmpty()) {
                 item {
                     Text(
-                        text = "Nothing queued — add a class, deadline, or exam, then come back.",
+                        text = "Nothing queued. Add a class, deadline, or exam, then come back.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -48,7 +48,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Boot receiver — reschedules all alarms after device restart -->
+        <!-- Boot receiver - reschedules all alarms after device restart -->
         <receiver
             android:name=".notifications.BootReceiver"
             android:enabled="true"
@@ -62,7 +62,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Reminder broadcast receiver — receives AlarmManager pings, builds notifications -->
+        <!-- Reminder broadcast receiver - receives AlarmManager pings, builds notifications -->
         <receiver
             android:name=".notifications.ReminderReceiver"
             android:enabled="true"

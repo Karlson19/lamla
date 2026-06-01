@@ -2,8 +2,6 @@ package app.lamla.notifications
 
 import android.content.Context
 import android.media.AudioManager
-import android.media.RingtoneManager
-import android.net.Uri
 import android.speech.tts.TextToSpeech
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -57,16 +55,6 @@ class VoiceAnnouncer @Inject constructor(
         if (ok) {
             tts?.language = Locale.getDefault()
             ready = true
-        }
-    }
-
-    companion object {
-        /** Play a one-shot custom sound URI (per-course override workaround). */
-        fun playUri(context: Context, uri: Uri) {
-            runCatching {
-                val r = RingtoneManager.getRingtone(context, uri)
-                r?.play()
-            }
         }
     }
 }

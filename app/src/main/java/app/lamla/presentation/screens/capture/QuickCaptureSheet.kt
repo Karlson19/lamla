@@ -107,7 +107,7 @@ fun QuickCaptureSheet(
 
             when (mode) {
                 null -> {
-                    // 2x2 grid — Text / Photo on top, Voice / Event on bottom.
+                    // 2x2 grid - Text / Photo on top, Voice / Event on bottom.
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ModeButton(label = "Text", icon = Icons.Outlined.EditNote, onClick = { mode = CaptureMode.Text }, modifier = Modifier.weight(1f))

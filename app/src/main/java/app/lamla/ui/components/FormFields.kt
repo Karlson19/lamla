@@ -23,7 +23,7 @@ import app.lamla.ui.theme.LamlaTextStyles
 import app.lamla.ui.theme.lamla
 
 /**
- * Reusable form-field shell — used across all add/edit screens.
+ * Reusable form-field shell - used across all add/edit screens.
  *
  * Visual: 1dp hairline border, surfaceContainerLow bg, hairline focus indicator
  * (no Material outlined-textfield's heavy outlined chrome). Multi-line text
@@ -88,7 +88,7 @@ fun LamlaTextField(
 }
 
 /**
- * Labeled field row — label + field stacked.
+ * Labeled field row - label + field stacked.
  */
 @Composable
 fun LamlaField(

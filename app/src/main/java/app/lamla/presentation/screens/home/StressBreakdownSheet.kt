@@ -85,7 +85,7 @@ fun StressBreakdownSheet(
 
             if (contributions.isEmpty()) {
                 Text(
-                    text = "Nothing pending — your slate is clear.",
+                    text = "Nothing pending. Your slate is clear.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

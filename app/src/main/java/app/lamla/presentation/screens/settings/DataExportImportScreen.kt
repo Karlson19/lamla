@@ -12,11 +12,13 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.lamla.ui.components.LamlaButton
 import app.lamla.ui.components.LamlaSecondaryButton
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -46,17 +48,19 @@ fun DataExportImportScreen(
         if (uri != null) {
             scope.launch {
                 val ok = viewModel.importFrom(context, uri)
-                status = if (ok) "Imported successfully. Reminders rescheduled." else "Import failed — file format invalid."
+                status = if (ok) "Imported successfully. Reminders rescheduled." else "Import failed. The file format is invalid."
             }
         }
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Export & Import", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -81,7 +85,7 @@ fun DataExportImportScreen(
                 Text(status!!, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
             }
             Text(
-                "Importing replaces nothing — entries are added. Duplicates are dedup'd by ID where present.",
+                "Importing replaces nothing. Entries are added, and duplicates are matched by ID where present.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

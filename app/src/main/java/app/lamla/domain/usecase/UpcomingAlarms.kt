@@ -11,7 +11,7 @@ import java.time.temporal.TemporalAdjusters
 
 /**
  * Materializes the set of reminders that the engine has (or would have)
- * scheduled, sorted by trigger time. Pure function — useful for the
+ * scheduled, sorted by trigger time. Pure function - useful for the
  * Diagnostics screen and for unit tests of the reschedule math.
  *
  * This duplicates the per-row scheduling math from ReminderEngine because
@@ -20,7 +20,7 @@ import java.time.temporal.TemporalAdjusters
  *   - Run AlarmEngine smoke tests against this calculator
  *
  * If the two ever diverge, this is the canonical "what should be scheduled"
- * answer — the engine is what actually pokes AlarmManager but it derives
+ * answer - the engine is what actually pokes AlarmManager but it derives
  * from the same data.
  */
 object UpcomingAlarms {
@@ -50,14 +50,14 @@ object UpcomingAlarms {
     ): List<Entry> {
         val results = mutableListOf<Entry>()
 
-        // Helper — is now within the active semester window?
+        // Helper - is now within the active semester window?
         val inActiveSemester = activeSemester == null ||
             run {
                 val endOfLastDay = activeSemester.endDateEpochMs + 24L * 60 * 60_000
                 now.toEpochMilli() in activeSemester.startDateEpochMs..endOfLastDay
             }
 
-        // Classes — only if semester is current
+        // Classes - only if semester is current
         if (inActiveSemester) {
             classSessions.forEach { session ->
                 val course = coursesById[session.courseId] ?: return@forEach
@@ -80,7 +80,7 @@ object UpcomingAlarms {
             }
         }
 
-        // Deadlines — only pending
+        // Deadlines - only pending
         deadlines.filter { it.status == DeadlineStatus.Pending }.forEach { deadline ->
             val course = coursesById[deadline.courseId]
             deadline.reminderOffsetsMinutes.forEach { offset ->
@@ -90,7 +90,7 @@ object UpcomingAlarms {
                     results += Entry(
                         triggerAtEpochMs = trigger.toEpochMilli(),
                         kind = if (imminent) Entry.Kind.DeadlineImminent else Entry.Kind.Deadline,
-                        title = (course?.let { "${it.code} — " } ?: "") + deadline.title,
+                        title = (course?.let { "${it.code}: " } ?: "") + deadline.title,
                         subtitle = "${deadline.weightPercent.toInt()}% · ${humanLeadTime(offset)} before",
                         courseColorArgb = course?.colorArgb,
                         offsetMinutes = offset
@@ -117,7 +117,7 @@ object UpcomingAlarms {
             }
         }
 
-        // Office hours — only if semester current
+        // Office hours - only if semester current
         if (inActiveSemester) {
             lecturers.forEach { lec ->
                 lec.officeHours.forEach { slot ->

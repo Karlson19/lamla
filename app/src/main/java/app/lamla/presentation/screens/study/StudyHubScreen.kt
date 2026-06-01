@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,34 +18,41 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.ui.components.LamlaButton
+import app.lamla.ui.components.LamlaNavRow
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.ScreenHeader
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
 /**
- * Study Hub — landing screen for everything study-related.
+ * Study Hub - landing screen for everything study-related.
  *
  * Sections:
- *   - "Start a focused session" — big CTA → Pomodoro
- *   - "This week" — per-course bar chart (mini)
- *   - "Recent sessions" — last few completed
+ *   - "Start a focused session" - big CTA → Pomodoro
+ *   - "This week" - per-course bar chart (mini)
+ *   - "Recent sessions" - last few completed
  */
 @Composable
 fun StudyHubScreen(
     onStartPomodoro: () -> Unit,
+    onOpenExamMode: () -> Unit = {},
     viewModel: StudyHubViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
         contentPadding = PaddingValues(start = MaterialTheme.lamla.spacing.gutter, end = MaterialTheme.lamla.spacing.gutter, top = 24.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item { ScreenHeader(title = "Study", subtitle = "Deep work, gently scheduled.") }
         item {
-            LamlaSurface(modifier = Modifier.fillMaxWidth()) {
+            LamlaSurface(
+                modifier = Modifier.fillMaxWidth(),
+                glowColor = MaterialTheme.lamla.gradients.emberGlow,
+                glowAlpha = 0.22f
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Start a focused session", style = MaterialTheme.typography.titleLarge)
                     Text("25-minute Pomodoro by default. Long break every 4 cycles.",
@@ -52,6 +60,21 @@ fun StudyHubScreen(
                     LamlaButton(label = "Start Pomodoro", leadingIcon = Icons.Outlined.PlayArrow, onClick = onStartPomodoro)
                 }
             }
+        }
+        item {
+            val exams = state.upcomingExamCount
+            LamlaNavRow(
+                icon = Icons.Outlined.School,
+                title = "Exam Mode",
+                subtitle = when (exams) {
+                    0 -> "Plan focused revision around your exams"
+                    1 -> "1 exam coming up. Build a revision plan"
+                    else -> "$exams exams coming up. Build a revision plan"
+                },
+                accent = MaterialTheme.lamla.gradients.emberGlow,
+                badge = if (exams > 0) "$exams" else null,
+                onClick = onOpenExamMode
+            )
         }
         item { SectionLabel("This week", trailing = "${state.totalMinutesThisWeek / 60}h ${state.totalMinutesThisWeek % 60}m") }
         item { WeeklyBarChart(state) }

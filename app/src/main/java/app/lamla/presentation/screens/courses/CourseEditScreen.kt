@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.model.Lecturer
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.Palette
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
 
@@ -38,6 +39,8 @@ fun CourseEditScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().auroraBackdrop(),
+        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (courseId == null) "New course" else "Edit course", style = MaterialTheme.typography.titleMedium) },
@@ -47,7 +50,7 @@ fun CourseEditScreen(
                         Text("Save")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->

@@ -28,7 +28,7 @@ data class ClassEditUiState(
     val reminderOffsetsMinutes: List<Int> = listOf(30, 10, 0)
 ) {
     val canSave: Boolean
-        get() = selectedCourse != null && endMinutes > startMinutes && venue.isNotBlank().or(true)
+        get() = selectedCourse != null && endMinutes > startMinutes
         // (venue blank is allowed → "Venue TBA")
 }
 

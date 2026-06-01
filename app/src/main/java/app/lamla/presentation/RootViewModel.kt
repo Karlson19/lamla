@@ -15,7 +15,7 @@ import javax.inject.Inject
 /**
  * Holds app-shell state (theme + onboarding gate).
  *
- * `onboarded` is `StateFlow<Boolean?>` — null means "not loaded yet from DataStore",
+ * `onboarded` is `StateFlow<Boolean?>` - null means "not loaded yet from DataStore",
  * the first real emission flips to false/true. MainActivity uses the null state
  * to keep the splash up so the nav graph doesn't briefly mount the wrong start
  * destination on cold launch.

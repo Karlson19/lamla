@@ -6,8 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,17 +22,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.model.Course
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
 @Composable
 fun CoursesScreen(
     onCourseClick: (Long) -> Unit,
     onAddCourse: () -> Unit,
+    onOpenLecturers: () -> Unit = {},
     viewModel: CoursesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = Modifier.fillMaxSize().auroraBackdrop()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
@@ -48,12 +51,26 @@ fun CoursesScreen(
                     subtitle = state.semesterName?.let { "$it · ${state.courses.size} course${if (state.courses.size == 1) "" else "s"}" }
                 )
             }
+            item {
+                val lecturerCount = state.lecturerNameById.size
+                LamlaNavRow(
+                    icon = Icons.Outlined.Groups,
+                    title = "Lecturers",
+                    subtitle = when (lecturerCount) {
+                        0 -> "Office hours, contacts, and questions to ask"
+                        1 -> "1 lecturer · office hours and questions"
+                        else -> "$lecturerCount lecturers · office hours and questions"
+                    },
+                    badge = if (lecturerCount > 0) "$lecturerCount" else null,
+                    onClick = onOpenLecturers
+                )
+            }
             if (state.courses.isEmpty()) {
                 item {
                     EmptyState(
                         title = "No courses yet.",
                         body = "Add your courses to build out a timetable and tag deadlines.",
-                        icon = Icons.Outlined.MenuBook,
+                        icon = Icons.AutoMirrored.Outlined.MenuBook,
                         action = {
                             LamlaButton(label = "Add a course", leadingIcon = Icons.Outlined.Add, onClick = onAddCourse)
                         }

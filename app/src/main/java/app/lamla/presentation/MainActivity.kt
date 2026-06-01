@@ -69,6 +69,10 @@ class MainActivity : ComponentActivity() {
                     // Wait until we know if onboarding is done before mounting nav graph.
                     onboarded?.let { done ->
                         LamlaNavHost(startOnboarded = done)
+                        // Ask for the notification grant once the user is past
+                        // onboarding (so the prompt lands with context, right as
+                        // they reach a screen that depends on reminders).
+                        if (done) RequestNotificationPermissionOnce()
                     }
                 }
             }

@@ -21,3 +21,6 @@ keystore.properties
 local.properties
 build-debug.log
 *.log
+
+# Local agent / editor state
+/.claude/

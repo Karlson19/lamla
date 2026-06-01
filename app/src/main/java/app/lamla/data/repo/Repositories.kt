@@ -77,6 +77,7 @@ class QuestionRepository @Inject constructor(private val dao: QuestionDao) {
         dao.observeForLecturer(lecturerId).map { it.map { e -> e.toDomain() } }
     suspend fun pendingForLecturer(lecturerId: Long): List<Question> =
         dao.pendingForLecturer(lecturerId).map { it.toDomain() }
+    suspend fun all(): List<Question> = dao.all().map { it.toDomain() }
     suspend fun upsert(question: Question): Long = dao.upsert(question.toEntity())
     suspend fun markAnswered(id: Long, answeredAt: Long = System.currentTimeMillis()) =
         dao.markAnswered(id, answeredAt)

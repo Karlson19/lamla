@@ -23,8 +23,8 @@ import javax.inject.Singleton
  *
  * Cancel-on-edit story:
  *   - Each Reminder has a stableId derived from (kind, sourceId, offsetMinutes).
- *   - To re-schedule a row, we just call [scheduleForClassSession] again — it
- *     computes the *current* set of reminders (which may be different — user
+ *   - To re-schedule a row, we just call [scheduleForClassSession] again - it
+ *     computes the *current* set of reminders (which may be different - user
  *     changed venue, day, offsets), and AlarmScheduler.schedule replaces any
  *     existing PendingIntent with the same stableId (FLAG_UPDATE_CURRENT).
  *   - For *deletions* or for offset-list shrinks (user removed "30 min before"),
@@ -41,7 +41,7 @@ import javax.inject.Singleton
  *
  * Weekly recurrence: classes recur weekly. We schedule only the **next** occurrence
  * for each offset. When the alarm fires, [ReminderReceiver] (in a future revision)
- * could chain-schedule the next week — but Android's alarm budget makes this fine
+ * could chain-schedule the next week - but Android's alarm budget makes this fine
  * to do on app open / via the periodic refresh worker too. We re-schedule on each
  * boot, each app open, and via a weekly WorkManager job (see WeeklyReminderRefreshWorker).
  */
@@ -66,7 +66,7 @@ class ReminderEngine @Inject constructor(
         cancelForClassSession(session)
 
         // Don't keep firing reminders for a finished semester. A class that
-        // belongs to a semester whose end date has passed is dormant — the
+        // belongs to a semester whose end date has passed is dormant - the
         // user can resurrect it by extending the semester end date or creating
         // a new semester and importing the course. Until then: silence.
         if (!isSemesterCurrentlyActive(course.semesterId)) return
@@ -100,7 +100,7 @@ class ReminderEngine @Inject constructor(
      * between its start date and its end-date-plus-one-day (so reminders fire
      * through the final day of the semester, not just up to midnight before it).
      *
-     * Note: this is NOT the same as `Semester.isActive` — that flag is "the
+     * Note: this is NOT the same as `Semester.isActive` - that flag is "the
      * user's currently focused semester for UI display". A user could be
      * mid-semester and toggle isActive between semesters; the time check
      * remains the source of truth for "should reminders fire?".
@@ -140,7 +140,7 @@ class ReminderEngine @Inject constructor(
                         offsetMinutes = offset,
                         imminent = imminent,
                         triggerAtEpochMs = trigger,
-                        title = "${course.code} — ${deadline.title}",
+                        title = "${course.code}: ${deadline.title}",
                         body = "Due in $timeLabel · ${deadline.weightPercent.toInt()}% weight"
                     )
                 )
@@ -214,7 +214,7 @@ class ReminderEngine @Inject constructor(
         cancelForLecturerOfficeHours(lecturer)
 
         // Office hours are weekly recurring like classes. Only fire if the
-        // user's active semester is current — a lecturer's office hours from
+        // user's active semester is current - a lecturer's office hours from
         // last semester shouldn't keep nagging through break.
         val activeSem = semesterRepo.active()
         if (activeSem != null) {

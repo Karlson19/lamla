@@ -8,7 +8,7 @@ import java.time.LocalTime
 /**
  * Domain layer types.
  *
- * Strictly distinct from Room entities — UI/business code only sees these.
+ * Strictly distinct from Room entities - UI/business code only sees these.
  * Repositories map entity ↔ domain. This keeps Room annotations from leaking
  * into ViewModels (and lets us swap the persistence layer one day without
  * touching presentation).

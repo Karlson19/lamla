@@ -15,34 +15,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
+import app.lamla.ui.theme.softElevation
 import kotlin.math.roundToInt
 
 /**
- * Stress score display.
+ * Stress score, redesigned as a hero gauge.
  *
- * Top of the home screen. Renders:
- *   - Big tabular number (the score)
- *   - Band label ("Steady", "Crunch", etc.)
- *   - Subtle progress bar showing where today sits in the band
- *   - On tap → opens the breakdown sheet (the parent handles that)
+ * A bold circular gauge (gradient arc + colored glow) carries the number, with the
+ * band label and a one-line read on the right. The arc and glow are tinted by the
+ * band, so a Crunch day literally glows hot while a Chill day glows soft green; the
+ * number counts up as the score animates in. The whole card floats on a soft warm
+ * aura. This is the screen's focal point, so it earns the visual weight.
  *
- * Visual treatment: the *bar* is the color, not the number. The number stays
- * neutral so it can read at any band. This is restrained — versus the typical
- * traffic-light score that screams red at you.
- *
- * @param score      0–100 normalized stress score
+ * @param score      0-100 normalized stress score
  * @param band       Stress band, drives label + accent color
- * @param onClick    Tap → breakdown
+ * @param onClick    Tap to open the breakdown
  */
 @Composable
 fun StressIndicator(
@@ -52,114 +52,139 @@ fun StressIndicator(
     onClick: () -> Unit = {}
 ) {
     val target = score.coerceIn(0, 100).toFloat() / 100f
-    val animatedScore by animateFloatAsState(
+    val progress by animateFloatAsState(
         targetValue = target,
         animationSpec = MaterialTheme.lamla.motion.springGentle,
         label = "stress-progress"
     )
+    // Count the number up alongside the arc fill.
+    val displayed = (progress * 100f).roundToInt()
 
     val accent = bandColor(band)
-    val borderColor = MaterialTheme.lamla.colors.hairline
+    val animatedAccent by animateColorAsState(
+        targetValue = accent,
+        animationSpec = MaterialTheme.lamla.motion.tweenStandard(MaterialTheme.lamla.motion.medium2),
+        label = "stress-accent"
+    )
     val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerLg)
+    val aura = MaterialTheme.lamla.gradients.auraWarm
 
-    Column(
+    Row(
         modifier = modifier
+            .fillMaxWidth()
+            .softElevation(shape, radius = 18.dp)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
-            .border(1.dp, borderColor, shape)
+            // Faint warm aura blooming from the gauge side.
+            .drawBehind {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = aura,
+                        center = Offset(size.width * 0.20f, size.height * 0.5f),
+                        radius = size.height * 1.1f
+                    ),
+                    center = Offset(size.width * 0.20f, size.height * 0.5f),
+                    radius = size.height * 1.1f
+                )
+            }
+            .border(1.dp, MaterialTheme.lamla.colors.hairline, shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 22.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 22.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
+        StressGauge(progress = progress, displayed = displayed, accent = animatedAccent)
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Column {
-                Text(
-                    text = "Today's load".uppercase(),
-                    style = LamlaTextStyles.SectionLabel,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.size(4.dp))
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = score.toString(),
-                        style = MaterialTheme.typography.displayLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "/100",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-                    )
-                }
-            }
-            // Band label, right-aligned
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(MaterialTheme.lamla.spacing.cornerFull))
-                    .background(accent.copy(alpha = 0.12f))
-                    .padding(horizontal = 10.dp, vertical = 5.dp)
-            ) {
-                Text(
-                    text = band.label,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = accent
-                )
-            }
+            Text(
+                text = "Today's load".uppercase(),
+                style = LamlaTextStyles.SectionLabel,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = band.label,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = band.read,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        StressBar(progress = animatedScore, color = accent)
     }
 }
 
 @Composable
-private fun StressBar(progress: Float, color: Color) {
-    val railColor = MaterialTheme.lamla.colors.timelineRail
-    val animatedColor by animateColorAsState(
-        targetValue = color,
-        animationSpec = MaterialTheme.lamla.motion.tweenStandard(300),
-        label = "stress-bar-color"
-    )
-    Canvas(
+private fun StressGauge(progress: Float, displayed: Int, accent: Color) {
+    val track = MaterialTheme.lamla.colors.timelineRail
+    val accentLight = lerp(accent, Color.White, 0.42f)
+    val gaugeSize = 104.dp
+
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(6.dp)
+            .size(gaugeSize)
+            .glow(accent, androidx.compose.foundation.shape.CircleShape, radius = 18.dp, alpha = 0.45f),
+        contentAlignment = Alignment.Center
     ) {
-        val h = size.height
-        val w = size.width
-        // Rail
-        drawRoundRect(
-            color = railColor,
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(h / 2, h / 2)
-        )
-        // Filled progress
-        drawRoundRect(
-            color = animatedColor,
-            size = Size(width = w * progress, height = h),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(h / 2, h / 2)
-        )
-        // Tick marks at band thresholds (25 / 50 / 75) — subtle, only on rail
-        listOf(0.25f, 0.5f, 0.75f).forEach { t ->
-            if (t > progress) {
-                drawLine(
-                    color = railColor.copy(alpha = 0.5f),
-                    start = Offset(w * t, 0f),
-                    end = Offset(w * t, h),
-                    strokeWidth = 1f
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val stroke = 11.dp.toPx()
+            val inset = stroke / 2f
+            val arcSize = Size(size.width - stroke, size.height - stroke)
+            val topLeft = Offset(inset, inset)
+
+            // Track (full ring, faint).
+            drawArc(
+                color = track,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = stroke, cap = StrokeCap.Round)
+            )
+            // Progress arc with a gradient sweep in the band color.
+            if (progress > 0f) {
+                drawArc(
+                    brush = Brush.sweepGradient(
+                        colors = listOf(accentLight, accent, accentLight),
+                        center = Offset(size.width / 2f, size.height / 2f)
+                    ),
+                    startAngle = -90f,
+                    sweepAngle = 360f * progress.coerceIn(0f, 1f),
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = stroke, cap = StrokeCap.Round)
                 )
             }
+        }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = displayed.toString(),
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "/100",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.padding(bottom = 6.dp, start = 1.dp)
+            )
         }
     }
 }
 
-enum class StressBand(val label: String, val min: Int, val max: Int) {
-    Chill("Chill", 0, 24),
-    Steady("Steady", 25, 49),
-    Heavy("Heavy", 50, 74),
-    Crunch("Crunch", 75, 100);
+enum class StressBand(val label: String, val read: String, val min: Int, val max: Int) {
+    Chill("Chill", "Breathing room. Enjoy it.", 0, 24),
+    Steady("Steady", "A manageable rhythm.", 25, 49),
+    Heavy("Heavy", "Plenty on. Pace yourself.", 50, 74),
+    Crunch("Crunch", "Crunch time. Triage hard.", 75, 100);
 
     companion object {
         fun fromScore(score: Int): StressBand = when (score.coerceIn(0, 100)) {

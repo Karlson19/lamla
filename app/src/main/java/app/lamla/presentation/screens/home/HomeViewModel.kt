@@ -27,6 +27,8 @@ data class HomeUiState(
     val nextClass: TodayFlow.Item.ClassItem? = null,
     val courses: Map<Long, Course> = emptyMap(),
     val activeCourseAtNow: Course? = null,
+    /** Count of pending deadlines due within the next 7 days. Drives the Home shortcut. */
+    val deadlinesDueThisWeek: Int = 0,
     val isLoading: Boolean = true
 )
 
@@ -80,6 +82,10 @@ class HomeViewModel @Inject constructor(
 
         val stress = StressScore.compute(core.deadlines, coursesById)
 
+        val nowMs = System.currentTimeMillis()
+        val weekAheadMs = nowMs + 7L * 24 * 60 * 60_000
+        val dueThisWeek = core.deadlines.count { it.dueAtEpochMs in nowMs..weekAheadMs }
+
         HomeUiState(
             greeting = greetingFor(nowMins),
             userName = userName,
@@ -91,6 +97,7 @@ class HomeViewModel @Inject constructor(
             nextClass = nextClass,
             courses = coursesById,
             activeCourseAtNow = activeCourse,
+            deadlinesDueThisWeek = dueThisWeek,
             isLoading = false
         )
     }.stateIn(

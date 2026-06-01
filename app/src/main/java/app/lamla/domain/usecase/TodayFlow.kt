@@ -21,7 +21,7 @@ import java.time.ZoneId
  *
  * Why interleave? Because separate "Classes today" + "Deadlines today" cards
  * are how every other student app looks. A unified timeline shows the *actual
- * shape* of your day — when you're free, when you're back-to-back.
+ * shape* of your day - when you're free, when you're back-to-back.
  *
  * Renders as a left-rail timeline (see HomeScreen). Sort key is start time.
  */

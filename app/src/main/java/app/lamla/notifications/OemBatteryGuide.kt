@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat
  * OEM-specific battery optimization guides.
  *
  * These manufacturers aggressively kill background tasks even with battery
- * optimization disabled — they have proprietary "Auto-start manager" /
+ * optimization disabled - they have proprietary "Auto-start manager" /
  * "Protected apps" settings buried elsewhere. Knowing the manufacturer lets us
  * deep-link the user to the right screen rather than handwaving "go find it
  * in settings somewhere".

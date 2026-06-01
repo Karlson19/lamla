@@ -24,8 +24,8 @@ import app.lamla.ui.theme.lamla
  *   - Otherwise → MainScaffold with bottom-bar + nested screen routing.
  *
  * Transition language:
- *   - Forward (deeper) — slide left + fade
- *   - Back (shallower) — slide right + fade
+ *   - Forward (deeper) - slide left + fade
+ *   - Back (shallower) - slide right + fade
  *   - Both use [lamla.motion] emphasized tween for the slide.
  */
 @Composable
@@ -94,7 +94,8 @@ fun LamlaNavHost(startOnboarded: Boolean) {
             val args = it.toRoute<Route.CourseDetail>()
             app.lamla.presentation.screens.courses.CourseDetailScreen(
                 courseId = args.courseId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onOpenCaptures = { courseId -> navController.navigate(Route.CaptureGallery(courseId)) }
             )
         }
         composable<Route.LecturerEdit> {

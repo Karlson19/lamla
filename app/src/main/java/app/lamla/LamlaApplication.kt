@@ -17,7 +17,7 @@ import javax.inject.Inject
  *
  * Responsibilities at cold start:
  *   1. Ensure notification channels exist (idempotent, safe to call every launch).
- *   2. Schedule the daily reminder-refresh worker — recovers any reminder
+ *   2. Schedule the daily reminder-refresh worker - recovers any reminder
  *      that drifted off (OEM kill, crashed receiver, etc.) and keeps weekly
  *      recurrence going on its own.
  *
@@ -53,7 +53,7 @@ class LamlaApplication : Application(), Configuration.Provider {
      *     and means worst-case drift is one day.
      *
      * KEEP policy: if it's already enqueued (e.g. from a previous cold start),
-     * don't replace it — the existing cadence is fine.
+     * don't replace it - the existing cadence is fine.
      */
     private fun scheduleDailyReminderRefresh() {
         val request = PeriodicWorkRequestBuilder<RescheduleAllWorker>(

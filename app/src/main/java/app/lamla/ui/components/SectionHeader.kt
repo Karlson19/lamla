@@ -15,7 +15,7 @@ import app.lamla.ui.theme.lamla
 /**
  * ALL-CAPS section label (Linear-style). Compact, wide-tracked.
  *
- * Pair with a count badge on the right for "FIVE TASKS — 5" treatment.
+ * Pair with a count badge on the right for "FIVE TASKS - 5" treatment.
  */
 @Composable
 fun SectionLabel(
@@ -43,7 +43,7 @@ fun SectionLabel(
     }
 }
 
-/** Large screen header — the editorial "Today" / "Timetable" title. */
+/** Large screen header - the editorial "Today" / "Timetable" title. */
 @Composable
 fun ScreenHeader(
     title: String,
