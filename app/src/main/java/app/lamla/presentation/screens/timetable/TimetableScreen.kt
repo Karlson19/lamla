@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -225,13 +226,15 @@ private fun DayClassList(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(sessions, key = { it.id }) { session ->
+        itemsIndexed(sessions, key = { _, s -> s.id }) { index, session ->
             val course = coursesById[session.courseId]
-            TimetableClassRow(
-                session = session,
-                course = course,
-                onClick = { onClassClick(session.id) }
-            )
+            LamlaReveal(delayMillis = (index * 45).coerceAtMost(270)) {
+                TimetableClassRow(
+                    session = session,
+                    course = course,
+                    onClick = { onClassClick(session.id) }
+                )
+            }
         }
     }
 }

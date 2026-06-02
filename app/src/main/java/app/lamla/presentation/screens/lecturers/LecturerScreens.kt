@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -84,15 +85,17 @@ fun LecturersScreen(
             contentPadding = PaddingValues(MaterialTheme.lamla.spacing.gutter),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(state.lecturers, key = { it.id }) { l ->
-                LamlaSurface(modifier = Modifier.fillMaxWidth(), onClick = { onLecturer(l.id) }, contentPadding = MaterialTheme.lamla.spacing.md) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        InitialAvatar(name = l.name)
-                        Spacer(Modifier.size(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(l.name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                            if (l.officeLocation.isNotBlank()) {
-                                Text(l.officeLocation, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            itemsIndexed(state.lecturers, key = { _, l -> l.id }) { index, l ->
+                LamlaReveal(delayMillis = (index * 45).coerceAtMost(270)) {
+                    LamlaSurface(modifier = Modifier.fillMaxWidth(), onClick = { onLecturer(l.id) }, contentPadding = MaterialTheme.lamla.spacing.md) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            InitialAvatar(name = l.name)
+                            Spacer(Modifier.size(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(l.name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                if (l.officeLocation.isNotBlank()) {
+                                    Text(l.officeLocation, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
                             }
                         }
                     }
@@ -153,14 +156,16 @@ fun LecturerDetailScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                LamlaSurface(modifier = Modifier.fillMaxWidth()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (lecturer.email.isNotBlank()) DetailRow(Icons.Outlined.Email, lecturer.email)
-                        if (lecturer.phone.isNotBlank()) DetailRow(Icons.Outlined.Phone, lecturer.phone)
-                        if (lecturer.officeLocation.isNotBlank()) DetailRow(Icons.Outlined.MeetingRoom, lecturer.officeLocation)
-                        if (lecturer.notes.isNotBlank()) {
-                            Spacer(Modifier.size(6.dp))
-                            Text(lecturer.notes, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LamlaReveal {
+                    LamlaSurface(modifier = Modifier.fillMaxWidth()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            if (lecturer.email.isNotBlank()) DetailRow(Icons.Outlined.Email, lecturer.email)
+                            if (lecturer.phone.isNotBlank()) DetailRow(Icons.Outlined.Phone, lecturer.phone)
+                            if (lecturer.officeLocation.isNotBlank()) DetailRow(Icons.Outlined.MeetingRoom, lecturer.officeLocation)
+                            if (lecturer.notes.isNotBlank()) {
+                                Spacer(Modifier.size(6.dp))
+                                Text(lecturer.notes, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }
@@ -169,19 +174,21 @@ fun LecturerDetailScreen(
             if (lecturer.officeHours.isEmpty()) {
                 item { Text("No office hours set.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             } else {
-                items(lecturer.officeHours) { slot ->
-                    LamlaSurface(modifier = Modifier.fillMaxWidth(), contentPadding = MaterialTheme.lamla.spacing.md) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(
-                                slot.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3).uppercase(),
-                                style = LamlaTextStyles.SectionLabel,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                "%02d:%02d–%02d:%02d".format(slot.startMinutes / 60, slot.startMinutes % 60, slot.endMinutes / 60, slot.endMinutes % 60),
-                                style = LamlaTextStyles.Metric,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                itemsIndexed(lecturer.officeHours) { index, slot ->
+                    LamlaReveal(delayMillis = (index * 45).coerceAtMost(180)) {
+                        LamlaSurface(modifier = Modifier.fillMaxWidth(), contentPadding = MaterialTheme.lamla.spacing.md) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    slot.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3).uppercase(),
+                                    style = LamlaTextStyles.SectionLabel,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    "%02d:%02d–%02d:%02d".format(slot.startMinutes / 60, slot.startMinutes % 60, slot.endMinutes / 60, slot.endMinutes % 60),
+                                    style = LamlaTextStyles.Metric,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }

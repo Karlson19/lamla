@@ -96,67 +96,79 @@ fun ClassEditScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Course picker
-            FieldGroup(label = "Course") {
-                CoursePicker(
-                    selected = state.selectedCourse,
-                    courses = state.allCourses,
-                    onSelect = viewModel::selectCourse
-                )
-            }
-
-            FieldGroup(label = "Day") {
-                DayPicker(
-                    selected = state.dayOfWeek,
-                    onSelect = viewModel::setDay
-                )
-            }
-
-            FieldGroup(label = "Time") {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    LamlaSecondaryButton(
-                        label = formatTime(state.startMinutes),
-                        onClick = { showStart = true },
-                        leadingIcon = Icons.Outlined.Schedule,
-                        modifier = Modifier.weight(1f)
-                    )
-                    LamlaSecondaryButton(
-                        label = formatTime(state.endMinutes),
-                        onClick = { showEnd = true },
-                        leadingIcon = Icons.Outlined.Schedule,
-                        modifier = Modifier.weight(1f)
+            LamlaReveal(delayMillis = 0) {
+                FieldGroup(label = "Course") {
+                    CoursePicker(
+                        selected = state.selectedCourse,
+                        courses = state.allCourses,
+                        onSelect = viewModel::selectCourse
                     )
                 }
             }
 
-            FieldGroup(label = "Venue") {
-                TextField(
-                    value = state.venue,
-                    onValueChange = viewModel::setVenue,
-                    placeholder = "Building, room, e.g. PB 105",
-                    leadingIcon = Icons.Outlined.Place
-                )
+            LamlaReveal(delayMillis = 40) {
+                FieldGroup(label = "Day") {
+                    DayPicker(
+                        selected = state.dayOfWeek,
+                        onSelect = viewModel::setDay
+                    )
+                }
             }
 
-            FieldGroup(label = "Reminders") {
-                ReminderOffsetPicker(
-                    selectedOffsets = state.reminderOffsetsMinutes,
-                    options = listOf(0, 5, 10, 15, 30, 60),
-                    onToggle = viewModel::toggleReminderOffset
-                )
+            LamlaReveal(delayMillis = 80) {
+                FieldGroup(label = "Time") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LamlaSecondaryButton(
+                            label = formatTime(state.startMinutes),
+                            onClick = { showStart = true },
+                            leadingIcon = Icons.Outlined.Schedule,
+                            modifier = Modifier.weight(1f)
+                        )
+                        LamlaSecondaryButton(
+                            label = formatTime(state.endMinutes),
+                            onClick = { showEnd = true },
+                            leadingIcon = Icons.Outlined.Schedule,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            LamlaReveal(delayMillis = 120) {
+                FieldGroup(label = "Venue") {
+                    TextField(
+                        value = state.venue,
+                        onValueChange = viewModel::setVenue,
+                        placeholder = "Building, room, e.g. PB 105",
+                        leadingIcon = Icons.Outlined.Place
+                    )
+                }
+            }
+
+            LamlaReveal(delayMillis = 160) {
+                FieldGroup(label = "Reminders") {
+                    ReminderOffsetPicker(
+                        selectedOffsets = state.reminderOffsetsMinutes,
+                        options = listOf(0, 5, 10, 15, 30, 60),
+                        onToggle = viewModel::toggleReminderOffset
+                    )
+                }
             }
 
             if (classId != null) {
-                LamlaDestructiveButton(
-                    label = "Delete class",
-                    onClick = {
-                        scope.launch {
-                            viewModel.delete()
-                            onBack()
-                        }
-                    },
-                    leadingIcon = Icons.Outlined.Delete,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                LamlaReveal(delayMillis = 200) {
+                    LamlaDestructiveButton(
+                        label = "Delete class",
+                        onClick = {
+                            scope.launch {
+                                viewModel.delete()
+                                onBack()
+                            }
+                        },
+                        leadingIcon = Icons.Outlined.Delete,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

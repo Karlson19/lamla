@@ -63,41 +63,53 @@ fun CourseEditScreen(
                 .padding(top = 8.dp, bottom = 48.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            LamlaField("Course code") {
-                LamlaTextField(value = state.code, onValueChange = viewModel::setCode, placeholder = "e.g. COE271")
+            LamlaReveal(delayMillis = 0) {
+                LamlaField("Course code") {
+                    LamlaTextField(value = state.code, onValueChange = viewModel::setCode, placeholder = "e.g. COE271")
+                }
             }
-            LamlaField("Course name") {
-                LamlaTextField(value = state.name, onValueChange = viewModel::setName, placeholder = "e.g. Computer Networking")
+            LamlaReveal(delayMillis = 40) {
+                LamlaField("Course name") {
+                    LamlaTextField(value = state.name, onValueChange = viewModel::setName, placeholder = "e.g. Computer Networking")
+                }
             }
-            LamlaField("Credit hours") {
-                LamlaTextField(
-                    value = state.creditHoursText,
-                    onValueChange = viewModel::setCreditHours,
-                    placeholder = "3",
-                    keyboardType = KeyboardType.Number
-                )
+            LamlaReveal(delayMillis = 80) {
+                LamlaField("Credit hours") {
+                    LamlaTextField(
+                        value = state.creditHoursText,
+                        onValueChange = viewModel::setCreditHours,
+                        placeholder = "3",
+                        keyboardType = KeyboardType.Number
+                    )
+                }
             }
-            LamlaField("Lecturer") {
-                LecturerPicker(
-                    selected = state.selectedLecturer,
-                    options = state.allLecturers,
-                    onSelect = viewModel::setLecturer
-                )
+            LamlaReveal(delayMillis = 120) {
+                LamlaField("Lecturer") {
+                    LecturerPicker(
+                        selected = state.selectedLecturer,
+                        options = state.allLecturers,
+                        onSelect = viewModel::setLecturer
+                    )
+                }
             }
-            LamlaField("Color") {
-                ColorPicker(
-                    selected = state.colorArgb,
-                    onSelect = viewModel::setColor
-                )
+            LamlaReveal(delayMillis = 160) {
+                LamlaField("Color") {
+                    ColorPicker(
+                        selected = state.colorArgb,
+                        onSelect = viewModel::setColor
+                    )
+                }
             }
 
             if (courseId != null) {
-                LamlaDestructiveButton(
-                    label = "Delete course",
-                    onClick = { scope.launch { viewModel.delete(); onBack() } },
-                    leadingIcon = Icons.Outlined.Delete,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                LamlaReveal(delayMillis = 200) {
+                    LamlaDestructiveButton(
+                        label = "Delete course",
+                        onClick = { scope.launch { viewModel.delete(); onBack() } },
+                        leadingIcon = Icons.Outlined.Delete,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

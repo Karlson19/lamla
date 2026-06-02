@@ -63,83 +63,97 @@ fun DeadlineEditScreen(
                 .padding(top = 8.dp, bottom = 48.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            LamlaField("Title") {
-                LamlaTextField(value = state.title, onValueChange = viewModel::setTitle, placeholder = "e.g. Network Lab Assignment 3")
-            }
-            LamlaField("Course") {
-                CoursePickerInline(state.allCourses, state.selectedCourse, viewModel::selectCourse)
-            }
-            LamlaField("Due") {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    LamlaSecondaryButton(
-                        label = state.dueDate?.toString() ?: "Pick date",
-                        onClick = { showDate = true },
-                        leadingIcon = Icons.Outlined.CalendarMonth,
-                        modifier = Modifier.weight(1f)
-                    )
-                    LamlaSecondaryButton(
-                        label = state.dueTime?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "Pick time",
-                        onClick = { showTime = true },
-                        leadingIcon = Icons.Outlined.Schedule,
-                        modifier = Modifier.weight(1f)
-                    )
+            LamlaReveal(delayMillis = 0) {
+                LamlaField("Title") {
+                    LamlaTextField(value = state.title, onValueChange = viewModel::setTitle, placeholder = "e.g. Network Lab Assignment 3")
                 }
             }
-            LamlaField("Weight (% of grade)") {
-                LamlaTextField(
-                    value = if (state.weightPercent == 0f) "" else state.weightPercent.toString(),
-                    onValueChange = { viewModel.setWeight(it.toFloatOrNull() ?: 0f) },
-                    placeholder = "10",
-                    keyboardType = KeyboardType.Decimal
-                )
+            LamlaReveal(delayMillis = 40) {
+                LamlaField("Course") {
+                    CoursePickerInline(state.allCourses, state.selectedCourse, viewModel::selectCourse)
+                }
             }
-            LamlaField("Mark obtained (optional)") {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        LamlaTextField(
-                            value = state.scoreText,
-                            onValueChange = viewModel::setScore,
-                            placeholder = "17",
-                            keyboardType = KeyboardType.Decimal,
+            LamlaReveal(delayMillis = 80) {
+                LamlaField("Due") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LamlaSecondaryButton(
+                            label = state.dueDate?.toString() ?: "Pick date",
+                            onClick = { showDate = true },
+                            leadingIcon = Icons.Outlined.CalendarMonth,
                             modifier = Modifier.weight(1f)
                         )
-                        Text("out of", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        LamlaTextField(
-                            value = state.scoreMaxText,
-                            onValueChange = viewModel::setScoreMax,
-                            placeholder = "20",
-                            keyboardType = KeyboardType.Decimal,
+                        LamlaSecondaryButton(
+                            label = state.dueTime?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "Pick time",
+                            onClick = { showTime = true },
+                            leadingIcon = Icons.Outlined.Schedule,
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    Text(
-                        text = "Leave the mark blank until it's graded. Filled marks feed your CWA projection.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            }
+            LamlaReveal(delayMillis = 120) {
+                LamlaField("Weight (% of grade)") {
+                    LamlaTextField(
+                        value = if (state.weightPercent == 0f) "" else state.weightPercent.toString(),
+                        onValueChange = { viewModel.setWeight(it.toFloatOrNull() ?: 0f) },
+                        placeholder = "10",
+                        keyboardType = KeyboardType.Decimal
                     )
                 }
             }
-            LamlaField("Description (optional)") {
-                LamlaTextField(
-                    value = state.description,
-                    onValueChange = viewModel::setDescription,
-                    placeholder = "Brief notes: what to submit, where",
-                    singleLine = false,
-                    minLines = 3,
-                    maxLines = 6
-                )
+            LamlaReveal(delayMillis = 160) {
+                LamlaField("Mark obtained (optional)") {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            LamlaTextField(
+                                value = state.scoreText,
+                                onValueChange = viewModel::setScore,
+                                placeholder = "17",
+                                keyboardType = KeyboardType.Decimal,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text("out of", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            LamlaTextField(
+                                value = state.scoreMaxText,
+                                onValueChange = viewModel::setScoreMax,
+                                placeholder = "20",
+                                keyboardType = KeyboardType.Decimal,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Text(
+                            text = "Leave the mark blank until it's graded. Filled marks feed your CWA projection.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            LamlaReveal(delayMillis = 200) {
+                LamlaField("Description (optional)") {
+                    LamlaTextField(
+                        value = state.description,
+                        onValueChange = viewModel::setDescription,
+                        placeholder = "Brief notes: what to submit, where",
+                        singleLine = false,
+                        minLines = 3,
+                        maxLines = 6
+                    )
+                }
             }
 
             if (deadlineId != null) {
-                LamlaDestructiveButton(
-                    label = "Delete deadline",
-                    onClick = { scope.launch { viewModel.delete(); onBack() } },
-                    leadingIcon = Icons.Outlined.Delete,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                LamlaReveal(delayMillis = 240) {
+                    LamlaDestructiveButton(
+                        label = "Delete deadline",
+                        onClick = { scope.launch { viewModel.delete(); onBack() } },
+                        leadingIcon = Icons.Outlined.Delete,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

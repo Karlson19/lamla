@@ -3,7 +3,7 @@ package app.lamla.presentation.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.usecase.UpcomingAlarms
 import app.lamla.presentation.openExactAlarmSettings
 import app.lamla.ui.components.LamlaButton
+import app.lamla.ui.components.LamlaReveal
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.LamlaTextStyles
@@ -82,76 +83,88 @@ fun DiagnosticsScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Text(
-                    text = "What the reminder system is doing right now. " +
-                        "If anything looks wrong, tap \"Run reschedule now\". The timestamp should tick within a second.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                LamlaReveal {
+                    Text(
+                        text = "What the reminder system is doing right now. " +
+                            "If anything looks wrong, tap \"Run reschedule now\". The timestamp should tick within a second.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             // Health card
             item {
-                LamlaSurface(modifier = Modifier.fillMaxWidth()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        HealthRow(
-                            label = "Exact alarms",
-                            value = if (state.canScheduleExact) "Allowed" else "Denied. Tap below to fix",
-                            ok = state.canScheduleExact
-                        )
-                        HealthRow(
-                            label = "Last reschedule run",
-                            value = humanizeTimestamp(state.lastRescheduleAt),
-                            ok = state.lastRescheduleAt > 0
-                        )
-                        HealthRow(
-                            label = "Last boot received",
-                            value = if (state.lastBootAt == 0L) "Never (since install)"
-                            else humanizeTimestamp(state.lastBootAt),
-                            ok = true  // null is fine if user hasn't rebooted since installing
-                        )
-                        HealthRow(
-                            label = "Reminders queued",
-                            value = "${state.totalUpcoming}",
-                            ok = true
-                        )
+                LamlaReveal(delayMillis = 40) {
+                    LamlaSurface(modifier = Modifier.fillMaxWidth()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            HealthRow(
+                                label = "Exact alarms",
+                                value = if (state.canScheduleExact) "Allowed" else "Denied. Tap below to fix",
+                                ok = state.canScheduleExact
+                            )
+                            HealthRow(
+                                label = "Last reschedule run",
+                                value = humanizeTimestamp(state.lastRescheduleAt),
+                                ok = state.lastRescheduleAt > 0
+                            )
+                            HealthRow(
+                                label = "Last boot received",
+                                value = if (state.lastBootAt == 0L) "Never (since install)"
+                                else humanizeTimestamp(state.lastBootAt),
+                                ok = true  // null is fine if user hasn't rebooted since installing
+                            )
+                            HealthRow(
+                                label = "Reminders queued",
+                                value = "${state.totalUpcoming}",
+                                ok = true
+                            )
+                        }
                     }
                 }
             }
 
             if (!state.canScheduleExact) {
                 item {
+                    LamlaReveal(delayMillis = 70) {
+                        LamlaButton(
+                            label = "Allow exact alarms",
+                            leadingIcon = Icons.Outlined.Alarm,
+                            onClick = { context.openExactAlarmSettings() },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+            item {
+                LamlaReveal(delayMillis = 100) {
                     LamlaButton(
-                        label = "Allow exact alarms",
-                        leadingIcon = Icons.Outlined.Alarm,
-                        onClick = { context.openExactAlarmSettings() },
+                        label = "Run reschedule now",
+                        leadingIcon = Icons.Outlined.Refresh,
+                        onClick = { viewModel.runRescheduleNow() },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
 
-            item {
-                LamlaButton(
-                    label = "Run reschedule now",
-                    leadingIcon = Icons.Outlined.Refresh,
-                    onClick = { viewModel.runRescheduleNow() },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            item { SectionLabel("Upcoming reminders", trailing = "next ${state.upcoming.size}") }
+            item { LamlaReveal(delayMillis = 130) { SectionLabel("Upcoming reminders", trailing = "next ${state.upcoming.size}") } }
 
             if (state.upcoming.isEmpty()) {
                 item {
-                    Text(
-                        text = "Nothing queued. Add a class, deadline, or exam, then come back.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    LamlaReveal(delayMillis = 160) {
+                        Text(
+                            text = "Nothing queued. Add a class, deadline, or exam, then come back.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             } else {
-                items(state.upcoming, key = { "${it.triggerAtEpochMs}-${it.kind}-${it.title}" }) { entry ->
-                    AlarmEntryRow(entry)
+                itemsIndexed(state.upcoming, key = { _, e -> "${e.triggerAtEpochMs}-${e.kind}-${e.title}" }) { index, entry ->
+                    LamlaReveal(delayMillis = (160 + index * 40).coerceAtMost(320)) {
+                        AlarmEntryRow(entry)
+                    }
                 }
             }
         }

@@ -7,7 +7,7 @@ import android.media.RingtoneManager
 import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.lamla.notifications.NotificationChannels
+import app.lamla.ui.components.LamlaReveal
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
@@ -58,15 +59,19 @@ fun NotificationSettingsScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text(
-                    text = "Tap a category to choose its sound. You can pick any ringtone or an " +
-                        "audio file from your device. Urgent alerts use the louder alarm tone by default.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                LamlaReveal {
+                    Text(
+                        text = "Tap a category to choose its sound. You can pick any ringtone or an " +
+                            "audio file from your device. Urgent alerts use the louder alarm tone by default.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            items(NotificationChannels.all, key = { it.id }) { channel ->
-                ChannelRow(channel)
+            itemsIndexed(NotificationChannels.all, key = { _, c -> c.id }) { index, channel ->
+                LamlaReveal(delayMillis = (40 + index * 45).coerceAtMost(270)) {
+                    ChannelRow(channel)
+                }
             }
         }
     }

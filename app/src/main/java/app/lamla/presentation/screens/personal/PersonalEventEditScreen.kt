@@ -80,54 +80,64 @@ fun PersonalEventEditScreen(
                 .padding(top = 8.dp, bottom = 48.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            LamlaField("Title") {
-                LamlaTextField(
-                    value = state.title,
-                    onValueChange = viewModel::setTitle,
-                    placeholder = "e.g. Project group meeting"
-                )
-            }
-            LamlaField("Date") {
-                LamlaSecondaryButton(
-                    label = state.date?.toString() ?: "Pick date",
-                    leadingIcon = Icons.Outlined.CalendarMonth,
-                    onClick = { showDate = true },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            LamlaField("Time") {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    LamlaSecondaryButton(
-                        label = state.startTime?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "Start",
-                        leadingIcon = Icons.Outlined.Schedule,
-                        onClick = { showStart = true },
-                        modifier = Modifier.weight(1f)
-                    )
-                    LamlaSecondaryButton(
-                        label = state.endTime?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "End",
-                        leadingIcon = Icons.Outlined.Schedule,
-                        onClick = { showEnd = true },
-                        modifier = Modifier.weight(1f)
+            LamlaReveal(delayMillis = 0) {
+                LamlaField("Title") {
+                    LamlaTextField(
+                        value = state.title,
+                        onValueChange = viewModel::setTitle,
+                        placeholder = "e.g. Project group meeting"
                     )
                 }
             }
-            LamlaField("Notes (optional)") {
-                LamlaTextField(
-                    value = state.notes,
-                    onValueChange = viewModel::setNotes,
-                    placeholder = "Anything worth remembering",
-                    singleLine = false,
-                    minLines = 2,
-                    maxLines = 6
-                )
+            LamlaReveal(delayMillis = 40) {
+                LamlaField("Date") {
+                    LamlaSecondaryButton(
+                        label = state.date?.toString() ?: "Pick date",
+                        leadingIcon = Icons.Outlined.CalendarMonth,
+                        onClick = { showDate = true },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+            LamlaReveal(delayMillis = 80) {
+                LamlaField("Time") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LamlaSecondaryButton(
+                            label = state.startTime?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "Start",
+                            leadingIcon = Icons.Outlined.Schedule,
+                            onClick = { showStart = true },
+                            modifier = Modifier.weight(1f)
+                        )
+                        LamlaSecondaryButton(
+                            label = state.endTime?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "End",
+                            leadingIcon = Icons.Outlined.Schedule,
+                            onClick = { showEnd = true },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+            LamlaReveal(delayMillis = 120) {
+                LamlaField("Notes (optional)") {
+                    LamlaTextField(
+                        value = state.notes,
+                        onValueChange = viewModel::setNotes,
+                        placeholder = "Anything worth remembering",
+                        singleLine = false,
+                        minLines = 2,
+                        maxLines = 6
+                    )
+                }
             }
             if (eventId != null) {
-                LamlaDestructiveButton(
-                    label = "Delete event",
-                    leadingIcon = Icons.Outlined.Delete,
-                    onClick = { scope.launch { viewModel.delete(); onBack() } },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                LamlaReveal(delayMillis = 160) {
+                    LamlaDestructiveButton(
+                        label = "Delete event",
+                        leadingIcon = Icons.Outlined.Delete,
+                        onClick = { scope.launch { viewModel.delete(); onBack() } },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

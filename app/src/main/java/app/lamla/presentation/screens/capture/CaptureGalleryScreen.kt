@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.model.Capture
 import app.lamla.domain.model.CaptureType
 import app.lamla.ui.components.EmptyState
+import app.lamla.ui.components.LamlaReveal
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.auroraBackdrop
@@ -69,8 +71,10 @@ fun CaptureGalleryScreen(
             contentPadding = PaddingValues(MaterialTheme.lamla.spacing.gutter),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(state.captures, key = { it.id }) { c ->
-                CaptureRow(c, onOpenPhoto = { viewerPath = it })
+            itemsIndexed(state.captures, key = { _, c -> c.id }) { index, c ->
+                LamlaReveal(delayMillis = (index * 40).coerceAtMost(280)) {
+                    CaptureRow(c, onOpenPhoto = { viewerPath = it })
+                }
             }
         }
     }

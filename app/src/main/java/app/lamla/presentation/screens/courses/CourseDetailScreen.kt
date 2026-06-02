@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -67,49 +68,59 @@ fun CourseDetailScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(accent.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
-                            Text(course.code.take(2).uppercase(), style = MaterialTheme.typography.labelLarge, color = accent)
+                LamlaReveal {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(accent.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+                                Text(course.code.take(2).uppercase(), style = MaterialTheme.typography.labelLarge, color = accent)
+                            }
+                            Column {
+                                Text(course.code, style = LamlaTextStyles.SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(course.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+                            }
                         }
-                        Column {
-                            Text(course.code, style = LamlaTextStyles.SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(course.name, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+                        if (state.lecturerName != null) {
+                            Text(state.lecturerName!!, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                    }
-                    if (state.lecturerName != null) {
-                        Text(state.lecturerName!!, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
-            item { SectionLabel(text = "Study minutes this week", trailing = "${state.minutesThisWeek} min") }
+            item { LamlaReveal(delayMillis = 40) { SectionLabel(text = "Study minutes this week", trailing = "${state.minutesThisWeek} min") } }
             item {
-                LamlaSurface(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = if (state.minutesThisWeek == 0) "No focused study logged yet." else "${state.minutesThisWeek / 60}h ${state.minutesThisWeek % 60}m logged in the past 7 days.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                LamlaReveal(delayMillis = 70) {
+                    LamlaSurface(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = if (state.minutesThisWeek == 0) "No focused study logged yet." else "${state.minutesThisWeek / 60}h ${state.minutesThisWeek % 60}m logged in the past 7 days.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+            item {
+                LamlaReveal(delayMillis = 100) {
+                    LamlaNavRow(
+                        icon = Icons.Outlined.PhotoLibrary,
+                        title = "Captures",
+                        subtitle = if (state.captureCount == 0) "Snap notes, photos, and voice memos"
+                        else "${state.captureCount} saved for this course",
+                        accent = accent,
+                        badge = if (state.captureCount > 0) "${state.captureCount}" else null,
+                        onClick = { onOpenCaptures(course.id) }
                     )
                 }
             }
-            item {
-                LamlaNavRow(
-                    icon = Icons.Outlined.PhotoLibrary,
-                    title = "Captures",
-                    subtitle = if (state.captureCount == 0) "Snap notes, photos, and voice memos"
-                    else "${state.captureCount} saved for this course",
-                    accent = accent,
-                    badge = if (state.captureCount > 0) "${state.captureCount}" else null,
-                    onClick = { onOpenCaptures(course.id) }
-                )
-            }
-            item { SectionLabel(text = "Deadlines", trailing = "${state.deadlines.size}") }
+            item { LamlaReveal(delayMillis = 130) { SectionLabel(text = "Deadlines", trailing = "${state.deadlines.size}") } }
             if (state.deadlines.isEmpty()) {
                 item {
-                    Text("No deadlines for this course.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    LamlaReveal(delayMillis = 160) {
+                        Text("No deadlines for this course.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             } else {
-                items(state.deadlines, key = { it.id }) { d -> DeadlineMiniRow(d) }
+                itemsIndexed(state.deadlines, key = { _, d -> d.id }) { index, d ->
+                    LamlaReveal(delayMillis = (160 + index * 40).coerceAtMost(300)) { DeadlineMiniRow(d) }
+                }
             }
         }
     }

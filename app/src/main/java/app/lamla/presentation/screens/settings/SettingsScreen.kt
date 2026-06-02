@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.ui.components.LamlaButton
 import app.lamla.ui.components.LamlaChip
 import app.lamla.ui.components.LamlaGhostButton
+import app.lamla.ui.components.LamlaReveal
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.LamlaTextField
 import app.lamla.ui.components.ScreenHeader
@@ -56,74 +57,90 @@ fun SettingsScreen(
         contentPadding = PaddingValues(start = MaterialTheme.lamla.spacing.gutter, end = MaterialTheme.lamla.spacing.gutter, top = tabTopInset(16.dp), bottom = tabBottomInset()),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        item { ScreenHeader(title = "Settings") }
+        item { LamlaReveal { ScreenHeader(title = "Settings") } }
 
-        item { SectionLabel("You") }
+        item { LamlaReveal(delayMillis = 40) { SectionLabel("You") } }
         item {
-            NameRow(name = state.userName, onClick = { editingName = true })
-        }
-
-        item { SectionLabel("Appearance") }
-        item {
-            ThemePicker(
-                mode = state.themeMode,
-                accent = state.themeAccent,
-                onModeChange = viewModel::setThemeMode,
-                onAccentChange = viewModel::setThemeAccent
-            )
+            LamlaReveal(delayMillis = 70) {
+                NameRow(name = state.userName, onClick = { editingName = true })
+            }
         }
 
-        item { SectionLabel("Notifications") }
+        item { LamlaReveal(delayMillis = 100) { SectionLabel("Appearance") } }
         item {
-            ToggleRow(
-                icon = Icons.Outlined.RecordVoiceOver,
-                title = "Speak class names",
-                subtitle = "Use text-to-speech for class reminders.",
-                checked = state.voiceAnnouncements,
-                onToggle = viewModel::setVoiceAnnouncements
-            )
-        }
-        item {
-            NavRow(
-                icon = Icons.Outlined.NotificationsActive,
-                title = "Sounds per channel",
-                subtitle = "Pick a sound for each reminder type.",
-                onClick = onNotificationSettings
-            )
-        }
-        item {
-            NavRow(
-                icon = Icons.Outlined.BatteryAlert,
-                title = "Battery optimization",
-                subtitle = "Make sure reminders fire on time.",
-                onClick = onBatteryGuide
-            )
+            LamlaReveal(delayMillis = 130) {
+                ThemePicker(
+                    mode = state.themeMode,
+                    accent = state.themeAccent,
+                    onModeChange = viewModel::setThemeMode,
+                    onAccentChange = viewModel::setThemeAccent
+                )
+            }
         }
 
-        item { SectionLabel("Data") }
+        item { LamlaReveal(delayMillis = 160) { SectionLabel("Notifications") } }
         item {
-            NavRow(
-                icon = Icons.Outlined.ImportExport,
-                title = "Export / Import",
-                subtitle = "Back up to a JSON file on your phone.",
-                onClick = onDataExportImport
-            )
+            LamlaReveal(delayMillis = 190) {
+                ToggleRow(
+                    icon = Icons.Outlined.RecordVoiceOver,
+                    title = "Speak class names",
+                    subtitle = "Use text-to-speech for class reminders.",
+                    checked = state.voiceAnnouncements,
+                    onToggle = viewModel::setVoiceAnnouncements
+                )
+            }
         }
         item {
-            NavRow(
-                icon = Icons.Outlined.MonitorHeart,
-                title = "Diagnostics",
-                subtitle = "See queued reminders and verify the background system.",
-                onClick = onDiagnostics
-            )
+            LamlaReveal(delayMillis = 200) {
+                NavRow(
+                    icon = Icons.Outlined.NotificationsActive,
+                    title = "Sounds per channel",
+                    subtitle = "Pick a sound for each reminder type.",
+                    onClick = onNotificationSettings
+                )
+            }
+        }
+        item {
+            LamlaReveal(delayMillis = 200) {
+                NavRow(
+                    icon = Icons.Outlined.BatteryAlert,
+                    title = "Battery optimization",
+                    subtitle = "Make sure reminders fire on time.",
+                    onClick = onBatteryGuide
+                )
+            }
         }
 
-        item { SectionLabel("About") }
+        item { LamlaReveal(delayMillis = 200) { SectionLabel("Data") } }
         item {
-            LamlaSurface(modifier = Modifier.fillMaxWidth()) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("Lamla", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                    Text("Local-only. No cloud, no accounts, no telemetry.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LamlaReveal(delayMillis = 200) {
+                NavRow(
+                    icon = Icons.Outlined.ImportExport,
+                    title = "Export / Import",
+                    subtitle = "Back up to a JSON file on your phone.",
+                    onClick = onDataExportImport
+                )
+            }
+        }
+        item {
+            LamlaReveal(delayMillis = 200) {
+                NavRow(
+                    icon = Icons.Outlined.MonitorHeart,
+                    title = "Diagnostics",
+                    subtitle = "See queued reminders and verify the background system.",
+                    onClick = onDiagnostics
+                )
+            }
+        }
+
+        item { LamlaReveal(delayMillis = 200) { SectionLabel("About") } }
+        item {
+            LamlaReveal(delayMillis = 200) {
+                LamlaSurface(modifier = Modifier.fillMaxWidth()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Lamla", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                        Text("Local-only. No cloud, no accounts, no telemetry.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }

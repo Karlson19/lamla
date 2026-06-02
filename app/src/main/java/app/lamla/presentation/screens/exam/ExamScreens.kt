@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -83,8 +84,10 @@ fun ExamModeScreen(
             contentPadding = PaddingValues(MaterialTheme.lamla.spacing.gutter),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(state.exams, key = { it.id }) { exam ->
-                ExamCard(exam, state.courses[exam.courseId])
+            itemsIndexed(state.exams, key = { _, e -> e.id }) { index, exam ->
+                LamlaReveal(delayMillis = (index * 45).coerceAtMost(270)) {
+                    ExamCard(exam, state.courses[exam.courseId])
+                }
             }
         }
     }
@@ -172,42 +175,52 @@ fun ExamEditScreen(
                 .padding(top = 8.dp, bottom = 48.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            LamlaField("Course") {
-                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    state.allCourses.forEach { c ->
-                        LamlaChip(label = "${c.code} • ${c.name}", color = Color(c.colorArgb), selected = c.id == state.selectedCourse?.id, onClick = { viewModel.selectCourse(c) })
-                    }
-                }
-            }
-            LamlaField("Date & time") {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    LamlaSecondaryButton(label = state.date?.toString() ?: "Pick date", onClick = { showDate = true }, leadingIcon = Icons.Outlined.CalendarMonth, modifier = Modifier.weight(1f))
-                    LamlaSecondaryButton(label = state.time?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "Pick time", onClick = { showTime = true }, leadingIcon = Icons.Outlined.Schedule, modifier = Modifier.weight(1f))
-                }
-            }
-            LamlaField("Venue") {
-                LamlaTextField(state.venue, viewModel::setVenue, "e.g. Great Hall", leadingIcon = Icons.Outlined.Place)
-            }
-            LamlaField("Topics") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LamlaReveal(delayMillis = 0) {
+                LamlaField("Course") {
                     androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        state.topics.forEach { t ->
-                            LamlaChip(label = t, leadingIcon = Icons.Outlined.Close, onClick = { viewModel.removeTopic(t) })
+                        state.allCourses.forEach { c ->
+                            LamlaChip(label = "${c.code} • ${c.name}", color = Color(c.colorArgb), selected = c.id == state.selectedCourse?.id, onClick = { viewModel.selectCourse(c) })
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Box(Modifier.weight(1f)) {
-                            LamlaTextField(newTopic, { newTopic = it }, "Add a topic")
+                }
+            }
+            LamlaReveal(delayMillis = 40) {
+                LamlaField("Date & time") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LamlaSecondaryButton(label = state.date?.toString() ?: "Pick date", onClick = { showDate = true }, leadingIcon = Icons.Outlined.CalendarMonth, modifier = Modifier.weight(1f))
+                        LamlaSecondaryButton(label = state.time?.let { "%02d:%02d".format(it.hour, it.minute) } ?: "Pick time", onClick = { showTime = true }, leadingIcon = Icons.Outlined.Schedule, modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            LamlaReveal(delayMillis = 80) {
+                LamlaField("Venue") {
+                    LamlaTextField(state.venue, viewModel::setVenue, "e.g. Great Hall", leadingIcon = Icons.Outlined.Place)
+                }
+            }
+            LamlaReveal(delayMillis = 120) {
+                LamlaField("Topics") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            state.topics.forEach { t ->
+                                LamlaChip(label = t, leadingIcon = Icons.Outlined.Close, onClick = { viewModel.removeTopic(t) })
+                            }
                         }
-                        LamlaButton(label = "Add", onClick = {
-                            if (newTopic.isNotBlank()) { viewModel.addTopic(newTopic.trim()); newTopic = "" }
-                        }, enabled = newTopic.isNotBlank())
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(Modifier.weight(1f)) {
+                                LamlaTextField(newTopic, { newTopic = it }, "Add a topic")
+                            }
+                            LamlaButton(label = "Add", onClick = {
+                                if (newTopic.isNotBlank()) { viewModel.addTopic(newTopic.trim()); newTopic = "" }
+                            }, enabled = newTopic.isNotBlank())
+                        }
                     }
                 }
             }
 
             if (examId != null) {
-                LamlaDestructiveButton(label = "Delete exam", leadingIcon = Icons.Outlined.Delete, onClick = { scope.launch { viewModel.delete(); onBack() } }, modifier = Modifier.fillMaxWidth())
+                LamlaReveal(delayMillis = 160) {
+                    LamlaDestructiveButton(label = "Delete exam", leadingIcon = Icons.Outlined.Delete, onClick = { scope.launch { viewModel.delete(); onBack() } }, modifier = Modifier.fillMaxWidth())
+                }
             }
         }
     }
