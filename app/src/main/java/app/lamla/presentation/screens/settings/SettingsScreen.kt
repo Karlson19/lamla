@@ -26,6 +26,8 @@ import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.AppTheme
 import app.lamla.ui.theme.swatch
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.presentation.screens.scaffold.tabBottomInset
+import app.lamla.presentation.screens.scaffold.tabTopInset
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
@@ -42,7 +44,7 @@ fun SettingsScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
-        contentPadding = PaddingValues(start = MaterialTheme.lamla.spacing.gutter, end = MaterialTheme.lamla.spacing.gutter, top = 24.dp, bottom = 120.dp),
+        contentPadding = PaddingValues(start = MaterialTheme.lamla.spacing.gutter, end = MaterialTheme.lamla.spacing.gutter, top = tabTopInset(16.dp), bottom = tabBottomInset()),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item { ScreenHeader(title = "Settings") }

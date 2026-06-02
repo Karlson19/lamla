@@ -22,6 +22,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lamla.domain.model.Course
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.presentation.screens.scaffold.tabBottomInset
+import app.lamla.presentation.screens.scaffold.tabTopInset
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
@@ -40,8 +42,8 @@ fun CoursesScreen(
             contentPadding = PaddingValues(
                 start = MaterialTheme.lamla.spacing.gutter,
                 end = MaterialTheme.lamla.spacing.gutter,
-                top = 24.dp,
-                bottom = 120.dp
+                top = tabTopInset(),
+                bottom = tabBottomInset()
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -87,7 +89,7 @@ fun CoursesScreen(
             containerColor = MaterialTheme.colorScheme.onSurface,
             contentColor = MaterialTheme.colorScheme.surface,
             shape = CircleShape,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = MaterialTheme.lamla.spacing.gutter, bottom = 96.dp)
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = MaterialTheme.lamla.spacing.gutter, bottom = tabBottomInset())
         ) { Icon(Icons.Outlined.Add, contentDescription = "Add course") }
     }
 }

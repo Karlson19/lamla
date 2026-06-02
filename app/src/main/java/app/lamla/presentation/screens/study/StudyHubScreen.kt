@@ -23,6 +23,8 @@ import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.ScreenHeader
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.presentation.screens.scaffold.tabBottomInset
+import app.lamla.presentation.screens.scaffold.tabTopInset
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
@@ -43,7 +45,7 @@ fun StudyHubScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     LazyColumn(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
-        contentPadding = PaddingValues(start = MaterialTheme.lamla.spacing.gutter, end = MaterialTheme.lamla.spacing.gutter, top = 24.dp, bottom = 120.dp),
+        contentPadding = PaddingValues(start = MaterialTheme.lamla.spacing.gutter, end = MaterialTheme.lamla.spacing.gutter, top = tabTopInset(16.dp), bottom = tabBottomInset()),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item { ScreenHeader(title = "Study", subtitle = "Deep work, gently scheduled.") }

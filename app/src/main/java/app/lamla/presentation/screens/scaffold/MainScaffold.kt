@@ -32,6 +32,7 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import app.lamla.presentation.navigation.Route
 import app.lamla.presentation.screens.courses.CoursesScreen
@@ -40,6 +41,32 @@ import app.lamla.presentation.screens.settings.SettingsScreen
 import app.lamla.presentation.screens.study.StudyHubScreen
 import app.lamla.presentation.screens.timetable.TimetableScreen
 import app.lamla.ui.theme.lamla
+
+/**
+ * Vertical room the floating bottom nav needs *above* the system navigation inset:
+ * the bar height (~52dp) + its 18dp gap + a little breathing space. Full-bleed tab
+ * screens pad the bottom of their scrollable content by this (on top of the nav
+ * inset) so the last row clears the bar, and float their FABs above it by the same
+ * amount. Keeping the number here means the bar and the screens never drift apart.
+ */
+val FloatingNavClearance: Dp = 88.dp
+
+/**
+ * Top padding for a full-bleed tab screen: the status-bar inset plus a small [extra].
+ * Content still scrolls *under* the transparent status bar; this just keeps the first
+ * row from starting beneath it.
+ */
+@Composable
+fun tabTopInset(extra: Dp = 8.dp): Dp =
+    WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + extra
+
+/**
+ * Bottom padding for a full-bleed tab screen (or its FAB): the system navigation
+ * inset plus the floating-nav clearance, plus an optional [extra].
+ */
+@Composable
+fun tabBottomInset(extra: Dp = 0.dp): Dp =
+    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + FloatingNavClearance + extra
 
 private enum class Tab(val label: String, val icon: ImageVector, val activeIcon: ImageVector) {
     Today("Today", Icons.Outlined.WbSunny, Icons.Outlined.WbSunny),

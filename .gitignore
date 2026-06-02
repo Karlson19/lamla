@@ -24,3 +24,4 @@ build-debug.log
 
 # Local agent / editor state
 /.claude/
+/.kotlin/

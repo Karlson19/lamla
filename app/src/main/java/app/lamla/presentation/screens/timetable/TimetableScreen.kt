@@ -32,6 +32,8 @@ import app.lamla.domain.model.ClassSession
 import app.lamla.domain.model.Course
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.presentation.screens.scaffold.tabBottomInset
+import app.lamla.presentation.screens.scaffold.tabTopInset
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
@@ -82,7 +84,7 @@ fun TimetableScreen(
                 modifier = Modifier.padding(
                     start = MaterialTheme.lamla.spacing.gutter,
                     end = MaterialTheme.lamla.spacing.gutter,
-                    top = 24.dp,
+                    top = tabTopInset(16.dp),
                     bottom = 8.dp
                 )
             )
@@ -116,7 +118,7 @@ fun TimetableScreen(
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = MaterialTheme.lamla.spacing.gutter, bottom = 96.dp)
+                .padding(end = MaterialTheme.lamla.spacing.gutter, bottom = tabBottomInset())
                 .size(48.dp)
                 .glow(gradients.emberGlow, androidx.compose.foundation.shape.CircleShape, radius = 15.dp, alpha = 0.5f)
                 .clip(androidx.compose.foundation.shape.CircleShape)
@@ -219,7 +221,7 @@ private fun DayClassList(
             start = MaterialTheme.lamla.spacing.gutter,
             end = MaterialTheme.lamla.spacing.gutter,
             top = 12.dp,
-            bottom = 120.dp
+            bottom = tabBottomInset()
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

@@ -26,7 +26,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,6 +42,8 @@ import app.lamla.presentation.rememberExactAlarmAllowed
 import app.lamla.presentation.rememberNotificationsAllowed
 import app.lamla.ui.components.*
 import app.lamla.ui.theme.LamlaTextStyles
+import app.lamla.presentation.screens.scaffold.tabBottomInset
+import app.lamla.presentation.screens.scaffold.tabTopInset
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.glow
 import app.lamla.ui.theme.lamla
@@ -101,8 +106,8 @@ fun HomeScreen(
             contentPadding = PaddingValues(
                 start = MaterialTheme.lamla.spacing.gutter,
                 end = MaterialTheme.lamla.spacing.gutter,
-                top = 24.dp,
-                bottom = 120.dp     // leave room for floating bar + FAB
+                top = tabTopInset(16.dp),
+                bottom = tabBottomInset()   // clears the system nav + floating bar
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
@@ -191,7 +196,7 @@ fun HomeScreen(
         QuickCaptureFab(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = MaterialTheme.lamla.spacing.gutter, bottom = 96.dp),
+                .padding(end = MaterialTheme.lamla.spacing.gutter, bottom = tabBottomInset()),
             onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 showCaptureSheet = true
@@ -240,9 +245,21 @@ private fun HomeHeader(
 ) {
     val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val date = today.format(DateTimeFormatter.ofPattern("d MMM"))
-    // "Good morning, Karlson" if we know the name; just "Good morning" otherwise.
-    // We avoid trailing punctuation either way - that's tone, not data.
-    val headline = if (userName.isNotBlank()) "$greeting, $userName" else greeting
+    // The one true "fire layer" hero on Home: the greeting reads in calm onSurface,
+    // but the student's own name is set in the ember gradient so it glows like the
+    // signature warmth. Falls back to a clean, name-less greeting when unset.
+    val ember = MaterialTheme.lamla.gradients.emberLinear
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val headline = remember(greeting, userName, ember, onSurface) {
+        buildAnnotatedString {
+            if (userName.isNotBlank()) {
+                withStyle(SpanStyle(color = onSurface)) { append("$greeting, ") }
+                withStyle(SpanStyle(brush = ember)) { append(userName) }
+            } else {
+                withStyle(SpanStyle(color = onSurface)) { append(greeting) }
+            }
+        }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = "$dayName · $date".uppercase(),
@@ -251,8 +268,7 @@ private fun HomeHeader(
         )
         Text(
             text = headline,
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.displaySmall
         )
     }
 }
