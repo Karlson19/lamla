@@ -1,5 +1,7 @@
 package app.lamla.presentation.screens.capture
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.lamla.domain.model.Course
@@ -55,16 +58,35 @@ fun QuickCaptureSheet(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val photoUri = remember { mutableStateOf<Uri?>(null) }
+    // Persist the real filesystem path (not the content-URI path) so the photo can
+    // actually be read back later.
+    val photoPath = remember { mutableStateOf<String?>(null) }
     val photoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
-        if (saved && photoUri.value != null) {
+        val path = photoPath.value
+        if (saved && path != null) {
             val course = selectedCourse
             scope.launch {
-                viewModel.savePhoto(course?.id, photoUri.value!!.path ?: "")
+                viewModel.savePhoto(course?.id, path)
                 onDismiss()
             }
         }
     }
+
+    // Build the target file + content URI, then hand off to the system camera.
+    fun launchCamera() {
+        val tempFile = File(context.filesDir, "captures/photo_${System.currentTimeMillis()}.jpg")
+        tempFile.parentFile?.mkdirs()
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
+        photoPath.value = tempFile.absolutePath
+        photoLauncher.launch(uri)
+    }
+
+    // CAMERA is declared in the manifest, so Android requires it to be granted at
+    // runtime before ACTION_IMAGE_CAPTURE will work - without this the capture just
+    // fails. Request on first use, then launch.
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) launchCamera() }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -112,11 +134,11 @@ fun QuickCaptureSheet(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ModeButton(label = "Text", icon = Icons.Outlined.EditNote, onClick = { mode = CaptureMode.Text }, modifier = Modifier.weight(1f))
                             ModeButton(label = "Photo", icon = Icons.Outlined.PhotoCamera, onClick = {
-                                val tempFile = File(context.filesDir, "captures/photo_${System.currentTimeMillis()}.jpg")
-                                tempFile.parentFile?.mkdirs()
-                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
-                                photoUri.value = uri
-                                photoLauncher.launch(uri)
+                                val granted = ContextCompat.checkSelfPermission(
+                                    context, Manifest.permission.CAMERA
+                                ) == PackageManager.PERMISSION_GRANTED
+                                if (granted) launchCamera()
+                                else cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                             }, modifier = Modifier.weight(1f))
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

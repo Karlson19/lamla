@@ -130,6 +130,9 @@ fun MainScaffold(rootNavController: NavController) {
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                // Sit above the system navigation bar (gesture pill or 3-button)
+                // so the floating tab bar never merges with the OS nav buttons.
+                .navigationBarsPadding()
                 .padding(bottom = 18.dp, start = 20.dp, end = 20.dp)
         )
     }
