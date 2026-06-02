@@ -1,5 +1,6 @@
 package app.lamla.data.local.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -117,7 +118,11 @@ data class DeadlineEntity(
     val dueAtEpochMs: Long,
     val weightPercent: Float,
     val status: DeadlineStatus,
-    val reminderOffsetsMinutes: List<Int>
+    val reminderOffsetsMinutes: List<Int>,
+    // Grade fields (added in schema v2). scoreObtained null = not yet graded.
+    // scoreMax carries a SQL default so the v1→v2 migration can backfill rows.
+    val scoreObtained: Float? = null,
+    @ColumnInfo(defaultValue = "100") val scoreMax: Float = 100f
 )
 
 @Entity(

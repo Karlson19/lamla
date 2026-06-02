@@ -29,12 +29,14 @@ internal fun ClassSession.toEntity() = ClassSessionEntity(
 internal fun DeadlineEntity.toDomain() = Deadline(
     id = id, courseId = courseId, title = title, description = description,
     dueAtEpochMs = dueAtEpochMs, weightPercent = weightPercent,
-    status = status, reminderOffsetsMinutes = reminderOffsetsMinutes
+    status = status, reminderOffsetsMinutes = reminderOffsetsMinutes,
+    scoreObtained = scoreObtained, scoreMax = scoreMax
 )
 internal fun Deadline.toEntity() = DeadlineEntity(
     id = id, courseId = courseId, title = title, description = description,
     dueAtEpochMs = dueAtEpochMs, weightPercent = weightPercent,
-    status = status, reminderOffsetsMinutes = reminderOffsetsMinutes
+    status = status, reminderOffsetsMinutes = reminderOffsetsMinutes,
+    scoreObtained = scoreObtained, scoreMax = scoreMax
 )
 
 // Lecturer

@@ -57,9 +57,22 @@ data class Deadline(
     val weightPercent: Float,         // 0..100, contribution to course grade
     val status: DeadlineStatus = DeadlineStatus.Pending,
     /** Spec default: 24h, 6h, 1h, 15m. */
-    val reminderOffsetsMinutes: List<Int> = listOf(24 * 60, 6 * 60, 60, 15)
+    val reminderOffsetsMinutes: List<Int> = listOf(24 * 60, 6 * 60, 60, 15),
+    /**
+     * Mark obtained on this assessment, out of [scoreMax]. Null = not graded yet.
+     * Used by the CWA projection: a graded deadline contributes
+     * (scoreObtained / scoreMax) * weightPercent points to the course mark.
+     */
+    val scoreObtained: Float? = null,
+    val scoreMax: Float = 100f
 ) {
     val dueAt: Instant get() = Instant.ofEpochMilli(dueAtEpochMs)
+
+    /** Score as a 0..100 percentage, or null if ungraded / [scoreMax] is non-positive. */
+    val scorePercent: Float?
+        get() = scoreObtained?.let { if (scoreMax > 0f) (it / scoreMax) * 100f else null }
+
+    val isGraded: Boolean get() = scoreObtained != null && scoreMax > 0f
 }
 
 @Serializable

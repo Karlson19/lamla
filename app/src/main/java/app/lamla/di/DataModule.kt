@@ -2,6 +2,7 @@ package app.lamla.di
 
 import android.content.Context
 import androidx.room.Room
+import app.lamla.data.local.ALL_MIGRATIONS
 import app.lamla.data.local.AppDatabase
 import app.lamla.data.local.dao.*
 import dagger.Module
@@ -19,6 +20,10 @@ object DataModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "lamla.db")
+            .addMigrations(*ALL_MIGRATIONS)
+            // Last-resort only: real upgrade paths are covered by ALL_MIGRATIONS so
+            // user data is preserved. This just avoids a hard crash if a device
+            // somehow lands on an unknown schema.
             .fallbackToDestructiveMigration()
             .build()
 

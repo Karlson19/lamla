@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -91,6 +92,35 @@ fun DeadlineEditScreen(
                     placeholder = "10",
                     keyboardType = KeyboardType.Decimal
                 )
+            }
+            LamlaField("Mark obtained (optional)") {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        LamlaTextField(
+                            value = state.scoreText,
+                            onValueChange = viewModel::setScore,
+                            placeholder = "17",
+                            keyboardType = KeyboardType.Decimal,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text("out of", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        LamlaTextField(
+                            value = state.scoreMaxText,
+                            onValueChange = viewModel::setScoreMax,
+                            placeholder = "20",
+                            keyboardType = KeyboardType.Decimal,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Text(
+                        text = "Leave the mark blank until it's graded. Filled marks feed your CWA projection.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             LamlaField("Description (optional)") {
                 LamlaTextField(

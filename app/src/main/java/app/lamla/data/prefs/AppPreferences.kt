@@ -43,6 +43,8 @@ class AppPreferences @Inject constructor(
         val batteryGuideShown = booleanPreferencesKey("battery_guide_shown")
         val lastRescheduleAt = androidx.datastore.preferences.core.longPreferencesKey("last_reschedule_at")
         val lastBootAt = androidx.datastore.preferences.core.longPreferencesKey("last_boot_at")
+        val priorCwa = floatPreferencesKey("prior_cwa")
+        val priorCredits = intPreferencesKey("prior_credits")
     }
 
     val theme: Flow<AppTheme> = context.dataStore.data.map { prefs ->
@@ -110,6 +112,23 @@ class AppPreferences @Inject constructor(
     val lastBootAt: Flow<Long> = context.dataStore.data.map { it[Keys.lastBootAt] ?: 0L }
     suspend fun setLastBootAt(ts: Long) {
         context.dataStore.edit { it[Keys.lastBootAt] = ts }
+    }
+
+    /**
+     * Prior academic standing for the CWA projection.
+     *
+     * The student already knows their cumulative average and how many credit hours
+     * it covers; we layer this semester's projected marks on top of it. [priorCwa]
+     * is null until set (first-semester students leave it blank), [priorCredits]
+     * defaults to 0. Stored locally only - never an account.
+     */
+    val priorCwa: Flow<Float?> = context.dataStore.data.map { it[Keys.priorCwa] }
+    val priorCredits: Flow<Int> = context.dataStore.data.map { it[Keys.priorCredits] ?: 0 }
+    suspend fun setPriorStanding(cwa: Float?, credits: Int) {
+        context.dataStore.edit {
+            if (cwa == null) it.remove(Keys.priorCwa) else it[Keys.priorCwa] = cwa.coerceIn(0f, 100f)
+            it[Keys.priorCredits] = credits.coerceAtLeast(0)
+        }
     }
 
     /** One-shot snapshot (use sparingly - prefer Flow observation). */

@@ -126,6 +126,11 @@ fun LamlaNavHost(startOnboarded: Boolean) {
                 onAdd = { navController.navigate(Route.DeadlineEdit()) }
             )
         }
+        composable<Route.Grades> {
+            app.lamla.presentation.screens.grades.GradesScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
         composable<Route.Pomodoro> {
             app.lamla.presentation.screens.study.PomodoroScreen(
                 onBack = { navController.popBackStack() }

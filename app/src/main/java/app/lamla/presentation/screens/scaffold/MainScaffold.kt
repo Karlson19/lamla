@@ -133,7 +133,8 @@ fun MainScaffold(rootNavController: NavController) {
                 Tab.Courses -> CoursesScreen(
                     onCourseClick = { id -> rootNavController.navigate(Route.CourseDetail(id)) },
                     onAddCourse = { rootNavController.navigate(Route.CourseEdit()) },
-                    onOpenLecturers = { rootNavController.navigate(Route.Lecturers) }
+                    onOpenLecturers = { rootNavController.navigate(Route.Lecturers) },
+                    onOpenGrades = { rootNavController.navigate(Route.Grades) }
                 )
                 Tab.Study -> StudyHubScreen(
                     onStartPomodoro = { rootNavController.navigate(Route.Pomodoro) },

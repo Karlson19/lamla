@@ -25,7 +25,10 @@ data class DeadlineEditUiState(
     val allCourses: List<Course> = emptyList(),
     val dueDate: LocalDate? = null,
     val dueTime: LocalTime? = null,
-    val weightPercent: Float = 0f
+    val weightPercent: Float = 0f,
+    // Grade entry. Blank score = not graded yet (feeds the CWA projection once filled).
+    val scoreText: String = "",
+    val scoreMaxText: String = "100"
 ) {
     val canSave: Boolean get() = title.isNotBlank() && selectedCourse != null && dueDate != null && dueTime != null
 }
@@ -57,7 +60,9 @@ class DeadlineEditViewModel @Inject constructor(
                         allCourses = courses,
                         dueDate = ldt.toLocalDate(),
                         dueTime = ldt.toLocalTime(),
-                        weightPercent = existing.weightPercent
+                        weightPercent = existing.weightPercent,
+                        scoreText = existing.scoreObtained?.cleanNumber() ?: "",
+                        scoreMaxText = existing.scoreMax.cleanNumber()
                     )
                 }
             }
@@ -70,6 +75,8 @@ class DeadlineEditViewModel @Inject constructor(
     fun setDate(d: LocalDate) { _state.update { it.copy(dueDate = d) } }
     fun setTime(t: LocalTime) { _state.update { it.copy(dueTime = t) } }
     fun setWeight(v: Float) { _state.update { it.copy(weightPercent = v.coerceIn(0f, 100f)) } }
+    fun setScore(v: String) { _state.update { it.copy(scoreText = v) } }
+    fun setScoreMax(v: String) { _state.update { it.copy(scoreMaxText = v) } }
 
     suspend fun save(): Boolean {
         val s = _state.value
@@ -78,6 +85,10 @@ class DeadlineEditViewModel @Inject constructor(
         val dueAt = LocalDateTime.of(s.dueDate, s.dueTime).atZone(zone).toInstant().toEpochMilli()
         // Cancel old alarms first
         s.deadlineId?.let { id -> deadlineRepo.get(id)?.let { engine.cancelForDeadline(it) } }
+        // Preserve the prior status (e.g. Done) when editing; default new ones to Pending.
+        val priorStatus = s.deadlineId?.let { deadlineRepo.get(it)?.status } ?: DeadlineStatus.Pending
+        val scoreMax = s.scoreMaxText.toFloatOrNull()?.takeIf { it > 0f } ?: 100f
+        val score = s.scoreText.trim().toFloatOrNull()?.coerceIn(0f, scoreMax)
         val newId = deadlineRepo.upsert(
             Deadline(
                 id = s.deadlineId ?: 0L,
@@ -86,7 +97,9 @@ class DeadlineEditViewModel @Inject constructor(
                 description = s.description.trim(),
                 dueAtEpochMs = dueAt,
                 weightPercent = s.weightPercent,
-                status = DeadlineStatus.Pending
+                status = priorStatus,
+                scoreObtained = score,
+                scoreMax = scoreMax
             )
         )
         deadlineRepo.get(newId)?.let { engine.scheduleForDeadline(it) }
@@ -100,3 +113,7 @@ class DeadlineEditViewModel @Inject constructor(
         deadlineRepo.delete(existing)
     }
 }
+
+/** "17.0" → "17", "17.5" → "17.5". Keeps the score fields tidy when prefilled. */
+private fun Float.cleanNumber(): String =
+    if (this == toLong().toFloat()) toLong().toString() else toString()

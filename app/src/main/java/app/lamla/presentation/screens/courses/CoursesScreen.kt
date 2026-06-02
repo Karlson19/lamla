@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ fun CoursesScreen(
     onCourseClick: (Long) -> Unit,
     onAddCourse: () -> Unit,
     onOpenLecturers: () -> Unit = {},
+    onOpenGrades: () -> Unit = {},
     viewModel: CoursesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -65,6 +67,14 @@ fun CoursesScreen(
                     },
                     badge = if (lecturerCount > 0) "$lecturerCount" else null,
                     onClick = onOpenLecturers
+                )
+            }
+            item {
+                LamlaNavRow(
+                    icon = Icons.Outlined.Insights,
+                    title = "Grades & CWA",
+                    subtitle = "Project your CWA from the marks you've banked",
+                    onClick = onOpenGrades
                 )
             }
             if (state.courses.isEmpty()) {
