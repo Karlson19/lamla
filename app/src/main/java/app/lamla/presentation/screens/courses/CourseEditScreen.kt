@@ -71,8 +71,8 @@ fun CourseEditScreen(
             }
             LamlaField("Credit hours") {
                 LamlaTextField(
-                    value = state.creditHours.toString(),
-                    onValueChange = { viewModel.setCreditHours(it.toIntOrNull() ?: 0) },
+                    value = state.creditHoursText,
+                    onValueChange = viewModel::setCreditHours,
                     placeholder = "3",
                     keyboardType = KeyboardType.Number
                 )

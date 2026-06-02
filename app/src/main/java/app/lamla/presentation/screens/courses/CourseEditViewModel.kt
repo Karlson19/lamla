@@ -22,7 +22,9 @@ data class CourseEditUiState(
     val courseId: Long? = null,
     val code: String = "",
     val name: String = "",
-    val creditHours: Int = 3,
+    // Held as raw text so the field can be cleared (placeholder shows) and typed
+    // naturally; parsed + clamped on save. Default 3 = standard KNUST course load.
+    val creditHoursText: String = "3",
     val selectedLecturer: Lecturer? = null,
     val allLecturers: List<Lecturer> = emptyList(),
     val colorArgb: Int = Palette.CoursePalette[0].toArgb(),
@@ -54,7 +56,7 @@ class CourseEditViewModel @Inject constructor(
                         courseId = existing.id,
                         code = existing.code,
                         name = existing.name,
-                        creditHours = existing.creditHours,
+                        creditHoursText = existing.creditHours.toString(),
                         selectedLecturer = lecturers.firstOrNull { l -> l.id == existing.lecturerId },
                         allLecturers = lecturers,
                         colorArgb = existing.colorArgb,
@@ -67,13 +69,20 @@ class CourseEditViewModel @Inject constructor(
 
     fun setCode(v: String) { _state.update { it.copy(code = v) } }
     fun setName(v: String) { _state.update { it.copy(name = v) } }
-    fun setCreditHours(v: Int) { _state.update { it.copy(creditHours = v.coerceIn(0, 12)) } }
+    /** Digits only, max 2 — clamping to the valid range happens on save, not mid-keystroke. */
+    fun setCreditHours(v: String) {
+        val cleaned = v.filter { it.isDigit() }.take(2)
+        _state.update { it.copy(creditHoursText = cleaned) }
+    }
     fun setLecturer(l: Lecturer?) { _state.update { it.copy(selectedLecturer = l) } }
     fun setColor(argb: Int) { _state.update { it.copy(colorArgb = argb) } }
 
     suspend fun save(): Boolean {
         val s = _state.value
         if (!s.canSave) return false
+        // Parse + clamp here. Min 1 so a course always carries credits — a 0-credit
+        // course would silently drop out of the CWA projection. Blank → default 3.
+        val credits = s.creditHoursText.toIntOrNull()?.coerceIn(1, 12) ?: 3
         courseRepo.upsert(
             Course(
                 id = s.courseId ?: 0L,
@@ -81,7 +90,7 @@ class CourseEditViewModel @Inject constructor(
                 name = s.name.trim(),
                 lecturerId = s.selectedLecturer?.id,
                 colorArgb = s.colorArgb,
-                creditHours = s.creditHours,
+                creditHours = credits,
                 semesterId = s.semesterId
             )
         )
