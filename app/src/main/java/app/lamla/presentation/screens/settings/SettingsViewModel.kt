@@ -3,14 +3,16 @@ package app.lamla.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.lamla.data.prefs.AppPreferences
-import app.lamla.ui.theme.AppTheme
+import app.lamla.ui.theme.ThemeAccent
+import app.lamla.ui.theme.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val theme: AppTheme = AppTheme.System,
+    val themeMode: ThemeMode = ThemeMode.System,
+    val themeAccent: ThemeAccent = ThemeAccent.Classic,
     val userName: String = "",
     val voiceAnnouncements: Boolean = false
 )
@@ -20,14 +22,16 @@ class SettingsViewModel @Inject constructor(
     private val prefs: AppPreferences
 ) : ViewModel() {
     val state: StateFlow<SettingsUiState> = combine(
-        prefs.theme,
+        prefs.themeMode,
+        prefs.themeAccent,
         prefs.userName,
         prefs.voiceAnnouncements
-    ) { theme, name, voice ->
-        SettingsUiState(theme = theme, userName = name, voiceAnnouncements = voice)
+    ) { mode, accent, name, voice ->
+        SettingsUiState(themeMode = mode, themeAccent = accent, userName = name, voiceAnnouncements = voice)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), SettingsUiState())
 
-    fun setTheme(t: AppTheme) { viewModelScope.launch { prefs.setTheme(t) } }
+    fun setThemeMode(m: ThemeMode) { viewModelScope.launch { prefs.setThemeMode(m) } }
+    fun setThemeAccent(a: ThemeAccent) { viewModelScope.launch { prefs.setThemeAccent(a) } }
     fun setUserName(name: String) { viewModelScope.launch { prefs.setUserName(name) } }
     fun setVoiceAnnouncements(on: Boolean) { viewModelScope.launch { prefs.setVoiceAnnouncements(on) } }
 }

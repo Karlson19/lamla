@@ -1,5 +1,9 @@
 package app.lamla.presentation.screens.grades
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,7 +76,7 @@ fun GradesScreen(
                     )
                 }
             } else {
-                item { ProjectionHero(state) }
+                item { ProjectionHero(state, onResetAll = { viewModel.resetSimulation() }) }
                 if (state.requiredSwaForNextClass != null && state.nextClassTarget != null) {
                     item { NextClassHint(state) }
                 }
@@ -81,9 +85,20 @@ fun GradesScreen(
             item { PriorStandingCard(state, onEdit = { showPriorEdit = true }) }
 
             if (state.courseGrades.isNotEmpty()) {
-                item { SectionLabel("This semester", trailing = "${state.courseGrades.size}") }
+                item {
+                    SectionLabel(
+                        "This semester",
+                        trailing = if (state.hasAnyGrades) "Drag to explore" else "${state.courseGrades.size}"
+                    )
+                }
                 items(state.courseGrades, key = { it.course.id }) { cg ->
-                    CourseGradeCard(cg)
+                    CourseGradeCard(
+                        cg = cg,
+                        simulatedMark = state.simulatedMarks[cg.course.id],
+                        onSimulate = { viewModel.simulateMark(cg.course.id, it) },
+                        onResetSimulation = { viewModel.clearSimulation(cg.course.id) },
+                        modifier = Modifier.animateItem()
+                    )
                 }
             }
         }
@@ -102,7 +117,7 @@ fun GradesScreen(
 // --- Hero -------------------------------------------------------------------
 
 @Composable
-private fun ProjectionHero(state: GradesUiState) {
+private fun ProjectionHero(state: GradesUiState, onResetAll: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val ember = MaterialTheme.lamla.gradients.emberLinear
     LamlaSurface(
@@ -111,10 +126,37 @@ private fun ProjectionHero(state: GradesUiState) {
         contentPadding = MaterialTheme.lamla.spacing.lg
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("PROJECTED CWA", style = LamlaTextStyles.SectionLabel, color = cs.onSurfaceVariant)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (state.isSimulating) "WHAT-IF CWA" else "PROJECTED CWA",
+                    style = LamlaTextStyles.SectionLabel,
+                    color = if (state.isSimulating) cs.tertiary else cs.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                // Only offer a global escape hatch once a hypothetical is in play.
+                if (state.isSimulating) {
+                    Text(
+                        text = "Reset all",
+                        style = LamlaTextStyles.SectionLabel,
+                        color = cs.tertiary,
+                        modifier = Modifier.clickable(onClick = onResetAll)
+                    )
+                }
+            }
+            // The hero number eases up from 0 when the screen lands - the projection
+            // "tallies itself" - then glides smoothly to track any what-if drag, so the
+            // CWA visibly responds to the sliders below.
+            var shown by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) { shown = true }
+            val target = state.projectedCwa ?: 0f
+            val animatedCwa by animateFloatAsState(
+                targetValue = if (shown) target else 0f,
+                animationSpec = tween(durationMillis = 650, easing = FastOutSlowInEasing),
+                label = "cwa"
+            )
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = state.projectedCwa?.let { fmt(it) } ?: "—",
+                    text = if (state.projectedCwa != null) fmt(animatedCwa) else "—",
                     style = MaterialTheme.typography.displayMedium.copy(brush = ember, fontWeight = FontWeight.SemiBold)
                 )
                 state.projectedClass?.let {
@@ -249,11 +291,21 @@ private fun PriorStandingDialog(
 // --- Per-course -------------------------------------------------------------
 
 @Composable
-private fun CourseGradeCard(cg: CourseGrade) {
+private fun CourseGradeCard(
+    cg: CourseGrade,
+    simulatedMark: Float?,
+    onSimulate: (Float) -> Unit,
+    onResetSimulation: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val cs = MaterialTheme.colorScheme
     val s = cg.standing
     val accent = Color(cg.course.colorArgb)
-    LamlaSurface(modifier = Modifier.fillMaxWidth(), contentPadding = MaterialTheme.lamla.spacing.md) {
+    // Projectable = there's a current pace to extrapolate, so a what-if has meaning.
+    val projectable = cg.projectedMark != null
+    val isSimulating = simulatedMark != null
+    val displayMark = simulatedMark ?: cg.projectedMark
+    LamlaSurface(modifier = modifier.fillMaxWidth(), contentPadding = MaterialTheme.lamla.spacing.md) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -262,11 +314,19 @@ private fun CourseGradeCard(cg: CourseGrade) {
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = cg.projectedMark?.let { fmt(it) } ?: "—",
+                        text = displayMark?.let { fmt(it) } ?: "—",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = if (cg.projectedMark != null) cs.onSurface else cs.onSurfaceVariant
+                        color = when {
+                            isSimulating -> accent
+                            displayMark != null -> cs.onSurface
+                            else -> cs.onSurfaceVariant
+                        }
                     )
-                    Text("projected", style = LamlaTextStyles.SectionLabel, color = cs.onSurfaceVariant)
+                    Text(
+                        text = if (isSimulating) "what-if" else "projected",
+                        style = LamlaTextStyles.SectionLabel,
+                        color = if (isSimulating) accent else cs.onSurfaceVariant
+                    )
                 }
             }
 
@@ -294,7 +354,56 @@ private fun CourseGradeCard(cg: CourseGrade) {
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
+
+            // Drag this course to a hypothetical mark and the hero CWA re-projects live.
+            if (projectable) {
+                WhatIfSlider(
+                    value = displayMark ?: 0f,
+                    accent = accent,
+                    isSimulating = isSimulating,
+                    onValueChange = onSimulate,
+                    onReset = onResetSimulation
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun WhatIfSlider(
+    value: Float,
+    accent: Color,
+    isSimulating: Boolean,
+    onValueChange: (Float) -> Unit,
+    onReset: () -> Unit
+) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "WHAT IF",
+                style = LamlaTextStyles.SectionLabel,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            if (isSimulating) {
+                Text(
+                    text = "Reset",
+                    style = LamlaTextStyles.SectionLabel,
+                    color = accent,
+                    modifier = Modifier.clickable(onClick = onReset)
+                )
+            }
+        }
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = 0f..100f,
+            colors = SliderDefaults.colors(
+                thumbColor = accent,
+                activeTrackColor = accent,
+                inactiveTrackColor = MaterialTheme.lamla.colors.timelineRail
+            )
+        )
     }
 }
 

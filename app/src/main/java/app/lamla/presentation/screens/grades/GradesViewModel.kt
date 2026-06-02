@@ -10,11 +10,14 @@ import app.lamla.domain.model.Course
 import app.lamla.domain.usecase.GradeProjection
 import app.lamla.domain.usecase.GradeProjection.CourseStanding
 import app.lamla.domain.usecase.GradeProjection.DegreeClass
+import app.lamla.domain.usecase.GradeProjection.ProjectionResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -47,9 +50,16 @@ data class GradesUiState(
     /** SWA you'd need this semester to land the next class up cumulatively. */
     val requiredSwaForNextClass: Float? = null,
     /** Credits carried by courses with enough data to project. */
-    val projectedCredits: Int = 0
+    val projectedCredits: Int = 0,
+    /**
+     * Active "what-if" overrides: courseId → the hypothetical mark the user dragged to.
+     * Drives the slider state and the live re-projection. Empty = showing real projection.
+     */
+    val simulatedMarks: Map<Long, Float> = emptyMap()
 ) {
     val hasAnyGrades: Boolean get() = courseGrades.any { it.standing.gradedWeight > 0f }
+    /** True while any course is being explored hypothetically. */
+    val isSimulating: Boolean get() = simulatedMarks.isNotEmpty()
 }
 
 @HiltViewModel
@@ -60,7 +70,24 @@ class GradesViewModel @Inject constructor(
     private val prefs: AppPreferences
 ) : ViewModel() {
 
-    val state: StateFlow<GradesUiState> = combine(
+    /** Active "what-if" overrides (courseId → hypothetical mark). Empty = real projection. */
+    private val simulatedMarks = MutableStateFlow<Map<Long, Float>>(emptyMap())
+
+    /**
+     * The real, data-driven half of the screen: courses, standings and the credited
+     * marks that feed the average. Folded in one combine (the 5-flow cap) so the cheap,
+     * frequently-changing simulation channel can layer on top without re-reading Room.
+     */
+    private data class BaseGrades(
+        val semesterName: String?,
+        val grades: List<CourseGrade>,
+        val semesterMarks: List<GradeProjection.CreditedMark>,
+        val priorCwa: Float?,
+        val priorCredits: Int,
+        val projectedCredits: Int
+    )
+
+    private val baseGrades = combine(
         semesterRepo.observeActive(),
         courseRepo.observeAll(),
         deadlineRepo.observeAll(),
@@ -82,31 +109,64 @@ class GradesViewModel @Inject constructor(
         val semesterMarks = projectable.map {
             GradeProjection.creditedMark(it.course, it.projectedMark!!)
         }
-        val projectedSwa = GradeProjection.weightedAverage(semesterMarks)
-        val projectedCredits = projectable.sumOf { it.course.creditHours }
-        val projectedCwa = GradeProjection.projectCwa(priorCwa, priorCredits, semesterMarks)
+        BaseGrades(
+            semesterName = semester?.name,
+            grades = grades,
+            semesterMarks = semesterMarks,
+            priorCwa = priorCwa,
+            priorCredits = priorCredits,
+            projectedCredits = projectable.sumOf { it.course.creditHours }
+        )
+    }
+
+    val state: StateFlow<GradesUiState> = combine(baseGrades, simulatedMarks) { base, sims ->
+        // Drop overrides for courses that are no longer projectable (e.g. a grade was
+        // removed) so the simulation can't reference a course the user can't see.
+        val liveSims = sims.filterKeys { id -> base.semesterMarks.any { it.courseId == id } }
+
+        val projectedSwa = (GradeProjection.weightedAverage(base.semesterMarks, liveSims)
+            as? GradeProjection.ProjectionResult.Success)?.value
+        val projectedCwa = (GradeProjection.projectCwa(base.priorCwa, base.priorCredits, base.semesterMarks, liveSims)
+            as? GradeProjection.ProjectionResult.Success)?.value
         val projectedClass = projectedCwa?.let { GradeProjection.classOf(it) }
         val nextTarget = projectedCwa?.let { GradeProjection.nextClassTarget(it) }
         val requiredSwa = nextTarget?.let {
-            GradeProjection.requiredSwaForTargetCwa(it, priorCwa, priorCredits, projectedCredits)
+            (GradeProjection.requiredSwaForTargetCwa(it, base.priorCwa, base.priorCredits, base.projectedCredits)
+                as? GradeProjection.ProjectionResult.Success)?.value
         }
 
         GradesUiState(
             loading = false,
-            semesterName = semester?.name,
-            courseGrades = grades,
-            priorCwa = priorCwa,
-            priorCredits = priorCredits,
+            semesterName = base.semesterName,
+            courseGrades = base.grades,
+            priorCwa = base.priorCwa,
+            priorCredits = base.priorCredits,
             projectedSwa = projectedSwa,
             projectedCwa = projectedCwa,
             projectedClass = projectedClass,
             nextClassTarget = nextTarget,
             requiredSwaForNextClass = requiredSwa,
-            projectedCredits = projectedCredits
+            projectedCredits = base.projectedCredits,
+            simulatedMarks = liveSims
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), GradesUiState())
 
     fun setPriorStanding(cwa: Float?, credits: Int) {
         viewModelScope.launch { prefs.setPriorStanding(cwa, credits) }
+    }
+
+    /** Drag a course to a hypothetical mark and watch the CWA re-project live. */
+    fun simulateMark(courseId: Long, mark: Float) {
+        simulatedMarks.update { it + (courseId to mark.coerceIn(0f, 100f)) }
+    }
+
+    /** Drop one course's what-if override, snapping it back to its real projection. */
+    fun clearSimulation(courseId: Long) {
+        simulatedMarks.update { it - courseId }
+    }
+
+    /** Exit what-if mode entirely. */
+    fun resetSimulation() {
+        simulatedMarks.value = emptyMap()
     }
 }

@@ -19,79 +19,103 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 /**
- * Themes. Picked by the user, never auto-imposed.
- *
- * Neutral set:
- * - [System]      - follows the device dark-mode setting (default).
- * - [Light]       - warm ivory + ink, gold accent.
- * - [Dark]        - cool obsidian + snow, gold accent.
- * - [Gold]        - light variant where the accent dominates more strongly (KNUST campus feel).
- * - [Monochrome]  - accent collapses to ink/snow, for users who want zero color noise.
- *
- * Vibrant set - each adapts to light & dark automatically via the system setting:
- * - [Indigo] [Emerald] [Teal] [Ocean] [Sunset] [Crimson] [Rose] [Lavender] [Plum]
- *
- * Every vibrant accent uses a 600-700-level primary in light mode (white text) and a
- * 300-level primary in dark mode (ink text), so label contrast stays >= 4.5:1.
+ * Appearance mode - the light/dark axis, independent of the accent color.
+ * - [System] follows the device dark-mode setting (default).
+ * - [Light]/[Dark] force that mode regardless of the system.
  */
-enum class AppTheme {
-    System, Light, Dark, Gold, Monochrome,
+enum class ThemeMode { System, Light, Dark }
+
+/**
+ * Accent color - the hue axis, independent of [ThemeMode]. Any accent combines
+ * with any mode, so the picker no longer forces a trade-off between the two.
+ *
+ * - [Classic]     - the signature ink/snow surface with a gold highlight (default).
+ * - [Gold]        - gold foregrounded as the primary (KNUST campus feel).
+ * - [Monochrome]  - accent collapses to ink/snow, zero color noise.
+ *
+ * Vibrant set - [Indigo] [Emerald] [Teal] [Ocean] [Sunset] [Crimson] [Rose]
+ * [Lavender] [Plum]. Each uses a 600-700-level primary in light mode (white text)
+ * and a 300-level primary in dark mode (ink text), so label contrast stays >= 4.5:1.
+ */
+enum class ThemeAccent {
+    Classic, Gold, Monochrome,
     Indigo, Emerald, Teal, Ocean, Sunset, Crimson, Rose, Lavender, Plum
 }
 
 /**
- * A representative accent color for theme-picker swatches. `null` for the neutral
- * themes (System/Light/Dark/Monochrome) that don't have a single accent.
+ * A representative swatch color for the accent picker. Every accent has one;
+ * Monochrome uses a neutral grey that reads on both light and dark chips.
  */
-fun AppTheme.swatch(): Color? = when (this) {
-    AppTheme.System, AppTheme.Light, AppTheme.Dark, AppTheme.Monochrome -> null
-    AppTheme.Gold -> Palette.Gold
-    AppTheme.Indigo -> Color(0xFF4F46E5)
-    AppTheme.Emerald -> Color(0xFF059669)
-    AppTheme.Teal -> Color(0xFF0D9488)
-    AppTheme.Ocean -> Color(0xFF0284C7)
-    AppTheme.Sunset -> Color(0xFFEA580C)
-    AppTheme.Crimson -> Color(0xFFDC2626)
-    AppTheme.Rose -> Color(0xFFDB2777)
-    AppTheme.Lavender -> Color(0xFF8B5CF6)
-    AppTheme.Plum -> Color(0xFFA21CAF)
+fun ThemeAccent.swatch(): Color = when (this) {
+    ThemeAccent.Classic -> Palette.Gold
+    ThemeAccent.Gold -> Palette.GoldDeep
+    ThemeAccent.Monochrome -> Color(0xFF8A8A8A)
+    ThemeAccent.Indigo -> Color(0xFF4F46E5)
+    ThemeAccent.Emerald -> Color(0xFF059669)
+    ThemeAccent.Teal -> Color(0xFF0D9488)
+    ThemeAccent.Ocean -> Color(0xFF0284C7)
+    ThemeAccent.Sunset -> Color(0xFFEA580C)
+    ThemeAccent.Crimson -> Color(0xFFDC2626)
+    ThemeAccent.Rose -> Color(0xFFDB2777)
+    ThemeAccent.Lavender -> Color(0xFF8B5CF6)
+    ThemeAccent.Plum -> Color(0xFFA21CAF)
+}
+
+/** Human-readable label for the accent picker. */
+fun ThemeAccent.label(): String = when (this) {
+    ThemeAccent.Classic -> "Classic"
+    ThemeAccent.Gold -> "KNUST gold"
+    ThemeAccent.Monochrome -> "Monochrome"
+    ThemeAccent.Indigo -> "Indigo"
+    ThemeAccent.Emerald -> "Emerald"
+    ThemeAccent.Teal -> "Teal"
+    ThemeAccent.Ocean -> "Ocean"
+    ThemeAccent.Sunset -> "Sunset"
+    ThemeAccent.Crimson -> "Crimson"
+    ThemeAccent.Rose -> "Rose"
+    ThemeAccent.Lavender -> "Lavender"
+    ThemeAccent.Plum -> "Plum"
+}
+
+/** Resolve the Material scheme for an [accent] in the given light/[dark] mode. */
+private fun schemeFor(accent: ThemeAccent, dark: Boolean): ColorScheme = when (accent) {
+    ThemeAccent.Classic -> if (dark) DarkScheme else LightScheme
+    ThemeAccent.Gold -> if (dark) GoldDarkScheme else GoldScheme
+    ThemeAccent.Monochrome -> if (dark) MonoDarkScheme else MonoLightScheme
+    ThemeAccent.Indigo -> if (dark) IndigoDark else IndigoLight
+    ThemeAccent.Emerald -> if (dark) EmeraldDark else EmeraldLight
+    ThemeAccent.Teal -> if (dark) TealDark else TealLight
+    ThemeAccent.Ocean -> if (dark) OceanDark else OceanLight
+    ThemeAccent.Sunset -> if (dark) SunsetDark else SunsetLight
+    ThemeAccent.Crimson -> if (dark) CrimsonDark else CrimsonLight
+    ThemeAccent.Rose -> if (dark) RoseDark else RoseLight
+    ThemeAccent.Lavender -> if (dark) LavenderDark else LavenderLight
+    ThemeAccent.Plum -> if (dark) PlumDark else PlumLight
 }
 
 @Composable
 fun LamlaTheme(
-    theme: AppTheme = AppTheme.System,
+    mode: ThemeMode = ThemeMode.System,
+    accent: ThemeAccent = ThemeAccent.Classic,
     content: @Composable () -> Unit
 ) {
     val systemDark = isSystemInDarkTheme()
-    val dark = when (theme) {
-        AppTheme.Light, AppTheme.Gold -> false
-        AppTheme.Dark -> true
-        else -> systemDark        // System, Monochrome, and every vibrant theme follow the system
+    val dark = when (mode) {
+        ThemeMode.Light -> false
+        ThemeMode.Dark -> true
+        ThemeMode.System -> systemDark
     }
 
-    val targetScheme = when (theme) {
-        AppTheme.System, AppTheme.Light, AppTheme.Dark -> if (dark) DarkScheme else LightScheme
-        AppTheme.Gold -> GoldScheme
-        AppTheme.Monochrome -> if (dark) MonoDarkScheme else MonoLightScheme
-        AppTheme.Indigo -> if (dark) IndigoDark else IndigoLight
-        AppTheme.Emerald -> if (dark) EmeraldDark else EmeraldLight
-        AppTheme.Teal -> if (dark) TealDark else TealLight
-        AppTheme.Ocean -> if (dark) OceanDark else OceanLight
-        AppTheme.Sunset -> if (dark) SunsetDark else SunsetLight
-        AppTheme.Crimson -> if (dark) CrimsonDark else CrimsonLight
-        AppTheme.Rose -> if (dark) RoseDark else RoseLight
-        AppTheme.Lavender -> if (dark) LavenderDark else LavenderLight
-        AppTheme.Plum -> if (dark) PlumDark else PlumLight
-    }
+    val targetScheme = schemeFor(accent, dark)
 
-    // Cross-fade the whole scheme when the user switches theme (or the system flips
-    // light/dark) so the change glides instead of hard-cutting.
+    // Cross-fade the whole scheme when the user switches mode/accent (or the system
+    // flips light/dark) so the change glides instead of hard-cutting.
     val colorScheme = animateColorScheme(targetScheme, Motion.tweenStandard(Motion.medium3))
 
-    val extended = when (theme) {
-        AppTheme.Gold -> GoldExtendedColors
-        AppTheme.Monochrome -> if (dark) DarkExtendedColors.asMonochrome() else LightExtendedColors.asMonochrome()
-        else -> (if (dark) DarkExtendedColors else LightExtendedColors).copy(timelineNow = colorScheme.primary)
+    val extended = if (accent == ThemeAccent.Monochrome) {
+        if (dark) DarkExtendedColors.asMonochrome() else LightExtendedColors.asMonochrome()
+    } else {
+        (if (dark) DarkExtendedColors else LightExtendedColors).copy(timelineNow = colorScheme.primary)
     }
 
     val gradients = gradientsFor(dark)
@@ -215,6 +239,16 @@ private val GoldScheme: ColorScheme = LightScheme.copy(
     onPrimary = Palette.Ivory,
     secondary = Palette.GoldDeep,
     surfaceTint = Palette.GoldDeep
+)
+
+/** Gold theme, dark variant - gold leads as the primary on the obsidian base. */
+private val GoldDarkScheme: ColorScheme = DarkScheme.copy(
+    primary = Palette.GoldSoft,
+    onPrimary = Palette.Obsidian,
+    primaryContainer = Palette.GoldGhost,
+    onPrimaryContainer = Palette.GoldSoft,
+    secondary = Palette.Gold,
+    surfaceTint = Palette.GoldSoft
 )
 
 private val MonoLightScheme: ColorScheme = LightScheme.copy(
@@ -415,11 +449,6 @@ private val DarkExtendedColors = LamlaColors(
     timelineRail = Palette.Onyx,
     timelineNow = Palette.Snow,
     tabularDigits = Palette.Snow
-)
-
-private val GoldExtendedColors = LightExtendedColors.copy(
-    timelineNow = Palette.GoldDeep,
-    tabularDigits = Palette.Ink
 )
 
 internal val LocalLamlaColors = staticCompositionLocalOf { LightExtendedColors }

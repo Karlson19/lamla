@@ -26,6 +26,7 @@ import app.lamla.ui.theme.lamla
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
 /**
  * Bottom sheet showing why today's stress score is what it is.
@@ -41,6 +42,7 @@ import java.time.format.DateTimeFormatter
 fun StressBreakdownSheet(
     score: Int,
     contributions: List<StressScore.Contribution>,
+    classLoad: StressScore.ClassLoad?,
     onDismiss: () -> Unit,
     onDeadlineClick: (Long) -> Unit
 ) {
@@ -83,15 +85,23 @@ fun StressBreakdownSheet(
             }
             Spacer(Modifier.size(20.dp))
 
-            if (contributions.isEmpty()) {
+            if (contributions.isEmpty() && classLoad == null) {
                 Text(
                     text = "Nothing pending. Your slate is clear.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                val maxPoints = contributions.maxOf { it.displayPoints }.coerceAtLeast(1)
+                // Bar scale spans both drivers so class load and deadlines compare fairly.
+                val maxPoints = (contributions.map { it.displayPoints } + listOfNotNull(classLoad?.displayPoints))
+                    .maxOrNull()?.coerceAtLeast(1) ?: 1
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    classLoad?.let { cl ->
+                        item(key = "class-load") {
+                            ClassLoadRow(classLoad = cl, maxPoints = maxPoints)
+                            Hairline(modifier = Modifier.fillMaxWidth().height(1.dp))
+                        }
+                    }
                     items(contributions, key = { it.deadline.id }) { c ->
                         ContributionRow(
                             contribution = c,
@@ -175,6 +185,73 @@ private fun ContributionRow(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ClassLoadRow(classLoad: StressScore.ClassLoad, maxPoints: Int) {
+    val accent = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                LamlaChip(label = "CLASSES", color = accent)
+                Text(
+                    text = "TODAY",
+                    style = LamlaTextStyles.Metric,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = if (classLoad.classCount == 1) "1 class ahead" else "${classLoad.classCount} classes ahead",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${fmtHours(classLoad.contactHoursRemaining)} of contact time still to come today",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.size(12.dp))
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "+${classLoad.displayPoints}",
+                style = LamlaTextStyles.Metric,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.size(4.dp))
+            Box(
+                modifier = Modifier
+                    .width(54.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.lamla.colors.timelineRail)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(classLoad.displayPoints.toFloat() / maxPoints)
+                        .background(accent.copy(alpha = 0.85f), RoundedCornerShape(2.dp))
+                )
+            }
+        }
+    }
+}
+
+/** "4.0" → "4h", "2.5" → "2h 30m". */
+private fun fmtHours(hours: Float): String {
+    val totalMin = (hours * 60).roundToInt()
+    val h = totalMin / 60
+    val m = totalMin % 60
+    return when {
+        h > 0 && m > 0 -> "${h}h ${m}m"
+        h > 0 -> "${h}h"
+        else -> "${m}m"
     }
 }
 

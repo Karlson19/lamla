@@ -22,6 +22,7 @@ import app.lamla.ui.components.LamlaNavRow
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.ScreenHeader
 import app.lamla.ui.components.SectionLabel
+import app.lamla.ui.components.rememberAppearFraction
 import app.lamla.ui.theme.LamlaTextStyles
 import app.lamla.presentation.screens.scaffold.tabBottomInset
 import app.lamla.presentation.screens.scaffold.tabTopInset
@@ -92,14 +93,21 @@ private fun WeeklyBarChart(state: StudyHubUiState) {
     val maxMin = state.perCourse.maxOf { it.second }.coerceAtLeast(1)
     LamlaSurface(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            state.perCourse.forEach { (course, mins) ->
+            state.perCourse.forEachIndexed { index, (course, mins) ->
+                // Each bar grows from 0 to its share when the chart appears, cascading
+                // top-to-bottom, so the week's work "draws itself in".
+                val barFraction = rememberAppearFraction(
+                    target = mins.toFloat() / maxMin,
+                    durationMs = 700,
+                    delayMillis = index * 60
+                )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(course?.code ?: "Untagged", modifier = Modifier.width(64.dp), style = LamlaTextStyles.SectionLabel, color = MaterialTheme.colorScheme.onSurface)
                     Box(modifier = Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.lamla.colors.timelineRail)) {
                         Box(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .fillMaxWidth(mins.toFloat() / maxMin)
+                                .fillMaxWidth(barFraction)
                                 .background(course?.colorArgb?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface, RoundedCornerShape(4.dp))
                         )
                     }

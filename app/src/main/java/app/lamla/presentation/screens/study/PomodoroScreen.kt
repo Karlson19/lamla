@@ -1,7 +1,13 @@
 package app.lamla.presentation.screens.study
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -15,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -66,11 +73,34 @@ fun PomodoroScreen(
         ) {
             Spacer(Modifier.weight(0.3f))
 
+            // Ring progress as an Animatable so we control the transition: it glides
+            // forward second-to-second, but *snaps* to 0 at a phase boundary instead
+            // of sweeping backward from full (the old rewind that read as a glitch).
+            val ringProgress = remember { Animatable(0f) }
+            LaunchedEffect(state.phase, state.totalSeconds) {
+                ringProgress.snapTo(state.progress)
+            }
+            LaunchedEffect(state.progress) {
+                ringProgress.animateTo(state.progress, animationSpec = tween(950, easing = LinearEasing))
+            }
+
+            // A gentle "breathing" pulse while a focus block runs, so the screen feels
+            // alive rather than frozen. Stops during breaks and when paused.
+            val breathe = rememberInfiniteTransition(label = "pomo-breathe")
+            val breath by breathe.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.035f,
+                animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Reverse),
+                label = "breath"
+            )
+            val running = state.isRunning && !state.isBreak
+
             // Ring + timer. A colored halo spills from the ring; it burns brightest
             // during a running focus block and dims to an ember during breaks/pauses.
             Box(
                 modifier = Modifier
                     .size(280.dp)
+                    .scale(if (running) breath else 1f)
                     .glow(
                         color = MaterialTheme.lamla.gradients.emberGlow,
                         shape = CircleShape,
@@ -79,13 +109,8 @@ fun PomodoroScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                val progress by animateFloatAsState(
-                    targetValue = state.progress,
-                    animationSpec = tween(durationMillis = 800, easing = LinearEasing),
-                    label = "pomo-progress"
-                )
                 ProgressRing(
-                    progress = progress,
+                    progress = ringProgress.value,
                     isBreak = state.isBreak,
                     accent = MaterialTheme.colorScheme.onSurface
                 )
@@ -104,15 +129,26 @@ fun PomodoroScreen(
             }
             Spacer(Modifier.size(24.dp))
 
-            // Cycle pips
+            // Cycle pips - position within the current long-break cadence. Resets each
+            // cadence (the old `i < completedFocusCycles` filled forever and never reset
+            // after a long break). A pip pops as it lights.
+            val cadencePos = state.completedFocusCycles % state.cyclesUntilLong
+            val pipsFilled = if (state.completedFocusCycles > 0 && cadencePos == 0) state.cyclesUntilLong else cadencePos
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 repeat(state.cyclesUntilLong) { i ->
-                    val filled = i < state.completedFocusCycles
+                    val filled = i < pipsFilled
+                    val pipColor by animateColorAsState(
+                        if (filled) MaterialTheme.colorScheme.onSurface else MaterialTheme.lamla.colors.hairlineStrong,
+                        MaterialTheme.lamla.motion.tweenStandard(MaterialTheme.lamla.motion.medium2),
+                        label = "pipColor"
+                    )
+                    val pipScale by animateFloatAsState(if (filled) 1.25f else 1f, MaterialTheme.lamla.motion.springBouncy, label = "pipScale")
                     Box(
                         modifier = Modifier
                             .size(8.dp)
+                            .scale(pipScale)
                             .clip(CircleShape)
-                            .background(if (filled) MaterialTheme.colorScheme.onSurface else MaterialTheme.lamla.colors.hairlineStrong)
+                            .background(pipColor)
                     )
                 }
             }

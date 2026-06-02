@@ -1,9 +1,13 @@
 package app.lamla.presentation.screens.settings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -12,6 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,7 +30,9 @@ import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.LamlaTextField
 import app.lamla.ui.components.ScreenHeader
 import app.lamla.ui.components.SectionLabel
-import app.lamla.ui.theme.AppTheme
+import app.lamla.ui.theme.ThemeAccent
+import app.lamla.ui.theme.ThemeMode
+import app.lamla.ui.theme.label
 import app.lamla.ui.theme.swatch
 import app.lamla.ui.theme.LamlaTextStyles
 import app.lamla.presentation.screens.scaffold.tabBottomInset
@@ -56,7 +65,12 @@ fun SettingsScreen(
 
         item { SectionLabel("Appearance") }
         item {
-            ThemePicker(selected = state.theme, onSelect = viewModel::setTheme)
+            ThemePicker(
+                mode = state.themeMode,
+                accent = state.themeAccent,
+                onModeChange = viewModel::setThemeMode,
+                onAccentChange = viewModel::setThemeAccent
+            )
         }
 
         item { SectionLabel("Notifications") }
@@ -135,7 +149,7 @@ private fun NameRow(name: String, onClick: () -> Unit) {
         contentPadding = MaterialTheme.lamla.spacing.md
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Outlined.PersonOutline, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
+            Icon(Icons.Outlined.PersonOutline, contentDescription = "User profile", tint = MaterialTheme.colorScheme.onSurface)
             Column(modifier = Modifier.weight(1f)) {
                 Text("Your name", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                 Text(
@@ -144,7 +158,7 @@ private fun NameRow(name: String, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Outlined.ChevronRight, contentDescription = "Navigate to name settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -185,40 +199,117 @@ private fun NameEditDialog(
     )
 }
 
+/**
+ * Theme picker, split into two clear, independent controls:
+ *   1. Appearance - a segmented Light/Dark/System control (the brightness axis).
+ *   2. Accent     - a grid of color swatches (the hue axis).
+ *
+ * Splitting them means picking "Dark" no longer drops your color, and picking a
+ * vibrant accent no longer forces system light/dark. Any combination is valid.
+ */
 @Composable
-private fun ThemePicker(selected: AppTheme, onSelect: (AppTheme) -> Unit) {
+private fun ThemePicker(
+    mode: ThemeMode,
+    accent: ThemeAccent,
+    onModeChange: (ThemeMode) -> Unit,
+    onAccentChange: (ThemeAccent) -> Unit
+) {
     LamlaSurface(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Theme", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                AppTheme.entries.forEach { t ->
-                    LamlaChip(
-                        label = themeLabel(t),
-                        color = t.swatch(),
-                        selected = t == selected,
-                        onClick = { onSelect(t) }
-                    )
+        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Appearance", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
+                ModeSegmented(selected = mode, onSelect = onModeChange)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Accent color", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                    Text(accent.label(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                AccentGrid(selected = accent, onSelect = onAccentChange)
             }
         }
     }
 }
 
-private fun themeLabel(t: AppTheme): String = when (t) {
-    AppTheme.System -> "Match system"
-    AppTheme.Light -> "Light"
-    AppTheme.Dark -> "Dark"
-    AppTheme.Gold -> "KNUST gold"
-    AppTheme.Monochrome -> "Monochrome"
-    AppTheme.Indigo -> "Indigo"
-    AppTheme.Emerald -> "Emerald"
-    AppTheme.Teal -> "Teal"
-    AppTheme.Ocean -> "Ocean"
-    AppTheme.Sunset -> "Sunset"
-    AppTheme.Crimson -> "Crimson"
-    AppTheme.Rose -> "Rose"
-    AppTheme.Lavender -> "Lavender"
-    AppTheme.Plum -> "Plum"
+/** Three-way segmented control for the light/dark mode. Cross-fades the active segment. */
+@Composable
+private fun ModeSegmented(selected: ThemeMode, onSelect: (ThemeMode) -> Unit) {
+    val options = listOf(
+        Triple(ThemeMode.System, "System", Icons.Outlined.BrightnessAuto),
+        Triple(ThemeMode.Light, "Light", Icons.Outlined.LightMode),
+        Triple(ThemeMode.Dark, "Dark", Icons.Outlined.DarkMode)
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        options.forEach { (m, label, icon) ->
+            val isSel = m == selected
+            val bg by animateColorAsState(
+                if (isSel) MaterialTheme.colorScheme.primary else Color.Transparent,
+                MaterialTheme.lamla.motion.tweenStandard(MaterialTheme.lamla.motion.medium2),
+                label = "segBg"
+            )
+            val fg by animateColorAsState(
+                if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                MaterialTheme.lamla.motion.tweenStandard(MaterialTheme.lamla.motion.medium2),
+                label = "segFg"
+            )
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(bg)
+                    .clickable { onSelect(m) }
+                    .padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(label, style = MaterialTheme.typography.labelLarge, color = fg)
+            }
+        }
+    }
+}
+
+/** Grid of accent swatches; the selected one rings up and shows a check. */
+@Composable
+private fun AccentGrid(selected: ThemeAccent, onSelect: (ThemeAccent) -> Unit) {
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        ThemeAccent.entries.forEach { accent ->
+            val isSel = accent == selected
+            val color = accent.swatch()
+            val ring by animateColorAsState(
+                if (isSel) MaterialTheme.colorScheme.onSurface else MaterialTheme.lamla.colors.hairline,
+                MaterialTheme.lamla.motion.tweenStandard(MaterialTheme.lamla.motion.short4),
+                label = "accentRing"
+            )
+            val scale by animateFloatAsState(if (isSel) 1f else 0.9f, MaterialTheme.lamla.motion.springBouncy, label = "accentScale")
+            val onColor = if (color.luminance() > 0.5f) Color.Black else Color.White
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .scale(scale)
+                    .clip(CircleShape)
+                    .background(color)
+                    .border(if (isSel) 2.5.dp else 1.dp, ring, CircleShape)
+                    .clickable { onSelect(accent) },
+                contentAlignment = Alignment.Center
+            ) {
+                if (isSel) {
+                    Icon(Icons.Outlined.Check, contentDescription = accent.label(), tint = onColor, modifier = Modifier.size(22.dp))
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -234,7 +325,7 @@ private fun ToggleRow(
         contentPadding = MaterialTheme.lamla.spacing.md
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
+            Icon(icon, contentDescription = title, tint = MaterialTheme.colorScheme.onSurface)
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                 if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -253,12 +344,12 @@ private fun NavRow(
 ) {
     LamlaSurface(modifier = Modifier.fillMaxWidth(), onClick = onClick, contentPadding = MaterialTheme.lamla.spacing.md) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
+            Icon(icon, contentDescription = title, tint = MaterialTheme.colorScheme.onSurface)
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                 if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Outlined.ChevronRight, contentDescription = "Navigate to $title", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

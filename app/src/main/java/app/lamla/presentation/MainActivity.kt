@@ -18,8 +18,9 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import app.lamla.notifications.RescheduleAllWorker
 import app.lamla.presentation.navigation.LamlaNavHost
-import app.lamla.ui.theme.AppTheme
 import app.lamla.ui.theme.LamlaTheme
+import app.lamla.ui.theme.ThemeAccent
+import app.lamla.ui.theme.ThemeMode
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -55,11 +56,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val rootVm: RootViewModel = hiltViewModel()
-            val theme by rootVm.theme.collectAsStateWithLifecycle(initialValue = AppTheme.System)
+            val themeMode by rootVm.themeMode.collectAsStateWithLifecycle(initialValue = ThemeMode.System)
+            val themeAccent by rootVm.themeAccent.collectAsStateWithLifecycle(initialValue = ThemeAccent.Classic)
             val onboarded by rootVm.onboarded.collectAsStateWithLifecycle()
             keepSplash = onboarded == null
 
-            LamlaTheme(theme = theme) {
+            LamlaTheme(mode = themeMode, accent = themeAccent) {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()

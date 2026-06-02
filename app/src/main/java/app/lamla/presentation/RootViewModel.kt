@@ -3,7 +3,8 @@ package app.lamla.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.lamla.data.prefs.AppPreferences
-import app.lamla.ui.theme.AppTheme
+import app.lamla.ui.theme.ThemeAccent
+import app.lamla.ui.theme.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,7 +25,8 @@ import javax.inject.Inject
 class RootViewModel @Inject constructor(
     prefs: AppPreferences
 ) : ViewModel() {
-    val theme: Flow<AppTheme> = prefs.theme
+    val themeMode: Flow<ThemeMode> = prefs.themeMode
+    val themeAccent: Flow<ThemeAccent> = prefs.themeAccent
 
     val onboarded: StateFlow<Boolean?> = prefs.onboarded
         .map<Boolean, Boolean?> { it }

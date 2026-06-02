@@ -4,7 +4,8 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import app.lamla.notifications.NotificationChannels
-import app.lamla.ui.theme.AppTheme
+import app.lamla.ui.theme.ThemeAccent
+import app.lamla.ui.theme.ThemeMode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -31,7 +32,11 @@ class AppPreferences @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private object Keys {
+        // `theme` is the legacy single-axis key (pre-1.1.5). Kept only so we can
+        // migrate an existing choice into the split mode/accent keys below.
         val theme = stringPreferencesKey("theme")
+        val themeMode = stringPreferencesKey("theme_mode")
+        val themeAccent = stringPreferencesKey("theme_accent")
         val onboarded = booleanPreferencesKey("onboarded")
         val userName = stringPreferencesKey("user_name")
         val voiceAnnouncements = booleanPreferencesKey("voice_announcements")
@@ -43,15 +48,53 @@ class AppPreferences @Inject constructor(
         val batteryGuideShown = booleanPreferencesKey("battery_guide_shown")
         val lastRescheduleAt = androidx.datastore.preferences.core.longPreferencesKey("last_reschedule_at")
         val lastBootAt = androidx.datastore.preferences.core.longPreferencesKey("last_boot_at")
+        val pomodoroDeadline = longPreferencesKey("pomodoro_deadline")
+        val pomodoroPhase = stringPreferencesKey("pomodoro_phase")
         val priorCwa = floatPreferencesKey("prior_cwa")
         val priorCredits = intPreferencesKey("prior_credits")
     }
 
-    val theme: Flow<AppTheme> = context.dataStore.data.map { prefs ->
-        prefs[Keys.theme]?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() } ?: AppTheme.System
+    /**
+     * Theme is two independent axes now: [themeMode] (light/dark) and [themeAccent]
+     * (hue). If the new keys are unset we fall back to migrating the legacy single
+     * `theme` value, so an existing user keeps whatever they had picked.
+     */
+    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { prefs ->
+        prefs[Keys.themeMode]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
+            ?: legacyMode(prefs[Keys.theme])
     }
-    suspend fun setTheme(value: AppTheme) {
-        context.dataStore.edit { it[Keys.theme] = value.name }
+    val themeAccent: Flow<ThemeAccent> = context.dataStore.data.map { prefs ->
+        prefs[Keys.themeAccent]?.let { runCatching { ThemeAccent.valueOf(it) }.getOrNull() }
+            ?: legacyAccent(prefs[Keys.theme])
+    }
+    suspend fun setThemeMode(value: ThemeMode) {
+        context.dataStore.edit { it[Keys.themeMode] = value.name }
+    }
+    suspend fun setThemeAccent(value: ThemeAccent) {
+        context.dataStore.edit { it[Keys.themeAccent] = value.name }
+    }
+
+    /** Map a legacy `AppTheme` name to the mode axis. Light/Gold forced light; Dark forced dark. */
+    private fun legacyMode(name: String?): ThemeMode = when (name) {
+        "Light", "Gold" -> ThemeMode.Light
+        "Dark" -> ThemeMode.Dark
+        else -> ThemeMode.System
+    }
+
+    /** Map a legacy `AppTheme` name to the accent axis (neutral modes -> Classic). */
+    private fun legacyAccent(name: String?): ThemeAccent = when (name) {
+        "Gold" -> ThemeAccent.Gold
+        "Monochrome" -> ThemeAccent.Monochrome
+        "Indigo" -> ThemeAccent.Indigo
+        "Emerald" -> ThemeAccent.Emerald
+        "Teal" -> ThemeAccent.Teal
+        "Ocean" -> ThemeAccent.Ocean
+        "Sunset" -> ThemeAccent.Sunset
+        "Crimson" -> ThemeAccent.Crimson
+        "Rose" -> ThemeAccent.Rose
+        "Lavender" -> ThemeAccent.Lavender
+        "Plum" -> ThemeAccent.Plum
+        else -> ThemeAccent.Classic
     }
 
     val onboarded: Flow<Boolean> = context.dataStore.data.map { it[Keys.onboarded] ?: false }
@@ -112,6 +155,18 @@ class AppPreferences @Inject constructor(
     val lastBootAt: Flow<Long> = context.dataStore.data.map { it[Keys.lastBootAt] ?: 0L }
     suspend fun setLastBootAt(ts: Long) {
         context.dataStore.edit { it[Keys.lastBootAt] = ts }
+    }
+
+    val pomodoroDeadline: Flow<Long> = context.dataStore.data.map { it[Keys.pomodoroDeadline] ?: 0L }
+    suspend fun setPomodoroDeadline(ts: Long) {
+        context.dataStore.edit { it[Keys.pomodoroDeadline] = ts }
+    }
+
+    val pomodoroPhase: Flow<String?> = context.dataStore.data.map { it[Keys.pomodoroPhase] }
+    suspend fun setPomodoroPhase(phase: String?) {
+        context.dataStore.edit {
+            if (phase == null) it.remove(Keys.pomodoroPhase) else it[Keys.pomodoroPhase] = phase
+        }
     }
 
     /**

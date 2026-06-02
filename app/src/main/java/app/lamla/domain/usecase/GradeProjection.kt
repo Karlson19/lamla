@@ -130,50 +130,80 @@ object GradeProjection {
 
     // --- Across courses: SWA & CWA --------------------------------------------
 
-    /** A (mark, creditHours) pair for one course feeding an average. */
-    data class CreditedMark(val mark: Float, val credits: Int)
+    /**
+     * A (mark, creditHours) pair for one course feeding an average. [courseId] is kept
+     * so a "what-if" simulation can override this course's mark by id without disturbing
+     * the rest of the semester.
+     */
+    data class CreditedMark(val courseId: Long, val mark: Float, val credits: Int)
 
-    fun creditedMark(course: Course, mark: Float) = CreditedMark(mark, course.creditHours)
+    fun creditedMark(course: Course, mark: Float) = CreditedMark(course.id, mark, course.creditHours)
 
-    /** Credit-weighted average of course marks, or null if no credits. */
-    fun weightedAverage(marks: List<CreditedMark>): Float? {
-        val totalCredits = marks.sumOf { it.credits }
-        if (totalCredits == 0) return null
-        val sum = marks.sumOf { it.mark.toDouble() * it.credits }
-        return (sum / totalCredits).toFloat()
+    /** Result of a projection that may fail due to missing data. */
+    sealed interface ProjectionResult<out T> {
+        data class Success<T>(val value: T) : ProjectionResult<T>
+        data object MissingCredits : ProjectionResult<Nothing>
+        data object Impossible : ProjectionResult<Nothing>
     }
 
     /**
-     * Project the new CWA by layering this semester's (projected) marks on top of a
-     * known prior standing. [priorCwa]/[priorCredits] are what the student has already
-     * accumulated (they know these); pass priorCwa = null for a first-semester student.
+     * Credit-weighted average of [marks]. [simulatedMarks] (courseId → mark) overrides a
+     * course's mark for "what-if" exploration; absent entries use the real projected mark.
      */
-    fun projectCwa(priorCwa: Float?, priorCredits: Int, semester: List<CreditedMark>): Float? {
+    fun weightedAverage(
+        marks: List<CreditedMark>,
+        simulatedMarks: Map<Long, Float> = emptyMap()
+    ): ProjectionResult<Float> {
+        val totalCredits = marks.sumOf { it.credits }
+        if (totalCredits == 0) return ProjectionResult.MissingCredits
+        val sum = marks.sumOf { cm ->
+            val mark = simulatedMarks[cm.courseId] ?: cm.mark
+            mark.toDouble() * cm.credits
+        }
+        return ProjectionResult.Success((sum / totalCredits).toFloat())
+    }
+
+    /**
+     * Project the new CWA by layering this semester's marks on top of a known prior
+     * standing. [priorCwa]/[priorCredits] are what the student has already accumulated;
+     * pass priorCwa = null for a first-semester student. [simulatedMarks] (courseId →
+     * mark) overrides a course's projected mark with a "what-if" value.
+     */
+    fun projectCwa(
+        priorCwa: Float?,
+        priorCredits: Int,
+        semester: List<CreditedMark>,
+        simulatedMarks: Map<Long, Float> = emptyMap()
+    ): ProjectionResult<Float> {
         val semCredits = semester.sumOf { it.credits }
-        val semPoints = semester.sumOf { it.mark.toDouble() * it.credits }
+        val semPoints = semester.sumOf { cm ->
+            val mark = simulatedMarks[cm.courseId] ?: cm.mark
+            mark.toDouble() * cm.credits
+        }
         val baseCredits = if (priorCwa != null) priorCredits else 0
         val basePoints = if (priorCwa != null) priorCwa.toDouble() * priorCredits else 0.0
         val total = baseCredits + semCredits
-        if (total == 0) return null
-        return ((basePoints + semPoints) / total).toFloat()
+        if (total == 0) return ProjectionResult.MissingCredits
+        return ProjectionResult.Success(((basePoints + semPoints) / total).toFloat())
     }
 
     /**
-     * The semester average (SWA) needed across [semesterCredits] credits this semester
-     * to move the cumulative average to [targetCwa], given the prior standing. May
-     * return a value > 100 (target unreachable this semester) or ≤ 0 (already there) —
-     * callers decide how to message that.
+     * The semester average (SWA) needed across [semesterCredits] credits this semester to
+     * move the cumulative average to [targetCwa], given the prior standing. The raw value
+     * is returned even when > 100 (target unreachable this semester) or ≤ 0 (already
+     * there) — callers decide how to message that.
      */
     fun requiredSwaForTargetCwa(
         targetCwa: Float,
         priorCwa: Float?,
         priorCredits: Int,
         semesterCredits: Int
-    ): Float? {
-        if (semesterCredits == 0) return null
+    ): ProjectionResult<Float> {
+        if (semesterCredits == 0) return ProjectionResult.MissingCredits
         val baseCredits = if (priorCwa != null) priorCredits else 0
         val basePoints = if (priorCwa != null) priorCwa.toDouble() * priorCredits else 0.0
         val total = baseCredits + semesterCredits
-        return ((targetCwa.toDouble() * total - basePoints) / semesterCredits).toFloat()
+        val needed = ((targetCwa.toDouble() * total - basePoints) / semesterCredits).toFloat()
+        return ProjectionResult.Success(needed)
     }
 }

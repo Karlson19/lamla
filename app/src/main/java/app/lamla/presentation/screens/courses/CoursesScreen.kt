@@ -90,7 +90,12 @@ fun CoursesScreen(
                 }
             } else {
                 items(state.courses, key = { it.id }) { course ->
-                    CourseRow(course = course, lecturerName = state.lecturerNameById[course.lecturerId], onClick = { onCourseClick(course.id) })
+                    CourseRow(
+                        course = course,
+                        lecturerName = state.lecturerNameById[course.lecturerId],
+                        onClick = { onCourseClick(course.id) },
+                        modifier = Modifier.animateItem()
+                    )
                 }
             }
         }
@@ -105,9 +110,9 @@ fun CoursesScreen(
 }
 
 @Composable
-private fun CourseRow(course: Course, lecturerName: String?, onClick: () -> Unit) {
+private fun CourseRow(course: Course, lecturerName: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val accent = Color(course.colorArgb)
-    LamlaSurface(modifier = Modifier.fillMaxWidth(), onClick = onClick, contentPadding = MaterialTheme.lamla.spacing.md) {
+    LamlaSurface(modifier = modifier.fillMaxWidth(), onClick = onClick, contentPadding = MaterialTheme.lamla.spacing.md) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(accent.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
                 Text(

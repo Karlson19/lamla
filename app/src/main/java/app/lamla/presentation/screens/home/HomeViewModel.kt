@@ -15,41 +15,33 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 data class HomeUiState(
-    /** "Good morning" / "Good afternoon" / "Good evening" / "Burning the midnight oil". */
     val greeting: String = "",
-    /** User's display name, or empty string when not set. Empty = name-less greeting. */
     val userName: String = "",
     val today: LocalDate = LocalDate.now(),
     val stressScore: Int = 0,
     val stressBand: StressBand = StressBand.Chill,
     val stressContributions: List<StressScore.Contribution> = emptyList(),
+    val stressClassLoad: StressScore.ClassLoad? = null,
     val flow: List<TodayFlow.Item> = emptyList(),
     val nextClass: TodayFlow.Item.ClassItem? = null,
     val courses: Map<Long, Course> = emptyMap(),
     val activeCourseAtNow: Course? = null,
-    /** Count of pending deadlines due within the next 7 days. Drives the Home shortcut. */
     val deadlinesDueThisWeek: Int = 0,
     val isLoading: Boolean = true
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    courseRepo: CourseRepository,
-    classRepo: ClassSessionRepository,
-    deadlineRepo: DeadlineRepository,
-    studyRepo: StudySessionRepository,
-    personalRepo: PersonalEventRepository,
-    prefs: AppPreferences
+    private val courseRepo: CourseRepository,
+    private val classRepo: ClassSessionRepository,
+    private val deadlineRepo: DeadlineRepository,
+    private val studyRepo: StudySessionRepository,
+    private val personalRepo: PersonalEventRepository,
+    private val prefs: AppPreferences
 ) : ViewModel() {
 
     private val zone: ZoneId = ZoneId.systemDefault()
 
-    /**
-     * Combine has a 5-flow limit at the type level. We pre-fold three of the
-     * five primary data flows into one to stay under that cap when we add the
-     * preferences (userName) channel. Tradeoff: a single allocation per emission
-     * vs. a more sprawling combine that would also work but be harder to read.
-     */
     private data class CoreData(
         val courses: List<Course>,
         val classes: List<ClassSession>,
@@ -80,7 +72,10 @@ class HomeViewModel @Inject constructor(
         val nextClass = flow.filterIsInstance<TodayFlow.Item.ClassItem>()
             .firstOrNull { it.startMinutes >= nowMins }
 
-        val stress = StressScore.compute(core.deadlines, coursesById)
+        // Today's teaching load feeds the stress score too - a packed lecture day is
+        // stressful even with no deadlines, and the burden eases as classes finish.
+        val todaysClasses = core.classes.filter { it.dayOfWeek == nowDay }
+        val stress = StressScore.compute(core.deadlines, coursesById, todaysClasses, nowMins)
 
         val nowMs = System.currentTimeMillis()
         val weekAheadMs = nowMs + 7L * 24 * 60 * 60_000
@@ -93,6 +88,7 @@ class HomeViewModel @Inject constructor(
             stressScore = stress.score,
             stressBand = StressBand.fromScore(stress.score),
             stressContributions = stress.contributions,
+            stressClassLoad = stress.classLoad,
             flow = flow,
             nextClass = nextClass,
             courses = coursesById,

@@ -56,6 +56,9 @@ class PomodoroViewModel @Inject constructor(
             val short = prefs.pomodoroShortBreakMin.first()
             val long = prefs.pomodoroLongBreakMin.first()
             val cycles = prefs.pomodoroCyclesUntilLong.first()
+            val savedDeadline = prefs.pomodoroDeadline.first()
+            val savedPhase = prefs.pomodoroPhase.first()
+
             _state.update {
                 it.copy(
                     totalSeconds = focus * 60,
@@ -66,6 +69,25 @@ class PomodoroViewModel @Inject constructor(
                     cyclesUntilLong = cycles
                 )
             }
+
+            if (savedDeadline > 0 && savedPhase != null) {
+                val phase = runCatching { PomoPhase.valueOf(savedPhase) }.getOrNull()
+                if (phase != null) {
+                    val remaining = ((savedDeadline - System.currentTimeMillis() + 999) / 1000L).toInt()
+                    if (remaining > 0) {
+                        _state.update { it.copy(
+                            phase = phase,
+                            remainingSeconds = remaining,
+                            isRunning = true
+                        ) }
+                        start(savedDeadline)
+                    } else {
+                        // Timer expired while app was dead; reset to default
+                        prefs.setPomodoroDeadline(0)
+                        prefs.setPomodoroPhase(null)
+                    }
+                }
+            }
         }
     }
 
@@ -73,18 +95,33 @@ class PomodoroViewModel @Inject constructor(
         if (_state.value.isRunning) pause() else start()
     }
 
-    private fun start() {
+    private fun start(existingDeadline: Long = -1L) {
         if (tickJob?.isActive == true) return
         _state.update { it.copy(isRunning = true) }
-        tickJob = viewModelScope.launch {
-            while (true) {
-                delay(1000)
-                val s = _state.value
-                if (!s.isRunning) break
-                if (s.remainingSeconds <= 1) {
-                    advancePhase()
-                } else {
-                    _state.update { it.copy(remainingSeconds = it.remainingSeconds - 1) }
+
+        val deadline = if (existingDeadline != -1L) {
+            existingDeadline
+        } else {
+            System.currentTimeMillis() + _state.value.remainingSeconds * 1000L
+        }
+
+        viewModelScope.launch {
+            prefs.setPomodoroDeadline(deadline)
+            prefs.setPomodoroPhase(_state.value.phase.name)
+
+            tickJob = viewModelScope.launch {
+                while (true) {
+                    delay(250)
+                    if (!_state.value.isRunning) break
+                    val remaining = ((deadline - System.currentTimeMillis() + 999) / 1000L).toInt()
+                    if (remaining <= 0) {
+                        _state.update { it.copy(remainingSeconds = 0) }
+                        advancePhase()
+                        break
+                    }
+                    if (remaining != _state.value.remainingSeconds) {
+                        _state.update { it.copy(remainingSeconds = remaining) }
+                    }
                 }
             }
         }
@@ -93,6 +130,10 @@ class PomodoroViewModel @Inject constructor(
     private fun pause() {
         _state.update { it.copy(isRunning = false) }
         tickJob?.cancel()
+        viewModelScope.launch {
+            prefs.setPomodoroDeadline(0)
+            prefs.setPomodoroPhase(null)
+        }
     }
 
     fun reset() {

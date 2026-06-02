@@ -85,7 +85,10 @@ fun DeadlinesScreen(
                     deadline = d,
                     course = state.coursesById[d.courseId],
                     onClick = { onDeadline(d.id) },
-                    onToggleDone = { scope.launch { viewModel.toggleDone(d) } }
+                    onToggleDone = { scope.launch { viewModel.toggleDone(d) } },
+                    // Reorder/insert/remove animates - toggling "done" slides the row
+                    // to its new rank instead of teleporting.
+                    modifier = Modifier.animateItem()
                 )
             }
         }
@@ -97,7 +100,8 @@ private fun DeadlineRow(
     deadline: Deadline,
     course: Course?,
     onClick: () -> Unit,
-    onToggleDone: () -> Unit
+    onToggleDone: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val accent = course?.colorArgb?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurfaceVariant
     val zone = ZoneId.systemDefault()
@@ -115,7 +119,7 @@ private fun DeadlineRow(
             else -> null
         }
     }
-    LamlaSurface(modifier = Modifier.fillMaxWidth(), onClick = onClick, contentPadding = MaterialTheme.lamla.spacing.md) {
+    LamlaSurface(modifier = modifier.fillMaxWidth(), onClick = onClick, contentPadding = MaterialTheme.lamla.spacing.md) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Checkbox
             CheckButton(checked = isDone, onClick = onToggleDone, color = accent)

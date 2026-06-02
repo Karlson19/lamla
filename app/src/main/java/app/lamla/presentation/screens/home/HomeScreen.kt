@@ -37,7 +37,9 @@ import app.lamla.domain.usecase.StressScore
 import app.lamla.domain.usecase.TodayFlow
 import app.lamla.presentation.enqueueExactAlarmReschedule
 import app.lamla.presentation.openAppNotificationSettings
+import app.lamla.presentation.openBatteryOptimizationSettings
 import app.lamla.presentation.openExactAlarmSettings
+import app.lamla.presentation.rememberBatteryOptimizationIgnored
 import app.lamla.presentation.rememberExactAlarmAllowed
 import app.lamla.presentation.rememberNotificationsAllowed
 import app.lamla.ui.components.*
@@ -89,6 +91,12 @@ fun HomeScreen(
     // re-arm every queued alarm so they upgrade to exact without waiting for a restart.
     val exactAlarmsAllowed = rememberExactAlarmAllowed()
     var exactAlarmsWereAllowed by rememberSaveable { mutableStateOf(exactAlarmsAllowed) }
+
+    // On Android, the OS can defer our alarms when the app isn't exempt from battery
+    // optimization, so reminders may arrive late. Re-checked on resume so it clears the
+    // moment the user grants the exemption.
+    val batteryOptimized = !rememberBatteryOptimizationIgnored()
+
     LaunchedEffect(exactAlarmsAllowed) {
         if (exactAlarmsAllowed && !exactAlarmsWereAllowed) context.enqueueExactAlarmReschedule()
         exactAlarmsWereAllowed = exactAlarmsAllowed
@@ -122,6 +130,14 @@ fun HomeScreen(
             if (notificationsAllowed && !exactAlarmsAllowed) {
                 item {
                     ExactAlarmsOffBanner(onEnable = { context.openExactAlarmSettings() })
+                }
+            }
+
+            // Only surface the battery nudge once notifications are on - otherwise the
+            // notifications banner is the more urgent fix and we avoid stacking three.
+            if (notificationsAllowed && batteryOptimized) {
+                item {
+                    BatteryOptimizationBanner(onEnable = { context.openBatteryOptimizationSettings() })
                 }
             }
 
@@ -186,7 +202,10 @@ fun HomeScreen(
                         onClassClick = onClassClick,
                         onDeadlineClick = onDeadlineClick,
                         onStudyClick = { onStartPomodoro() },
-                        onPersonalClick = onPersonalEventClick
+                        onPersonalClick = onPersonalEventClick,
+                        // The timeline reorders as the day progresses and items appear /
+                        // disappear; animate so rows slide rather than jump.
+                        modifier = Modifier.animateItem()
                     )
                 }
             }
@@ -208,6 +227,7 @@ fun HomeScreen(
         StressBreakdownSheet(
             score = state.stressScore,
             contributions = state.stressContributions,
+            classLoad = state.stressClassLoad,
             onDismiss = { showBreakdown = false },
             onDeadlineClick = { id ->
                 showBreakdown = false
@@ -296,7 +316,7 @@ private fun NotificationsOffBanner(onEnable: () -> Unit) {
     ) {
         Icon(
             imageVector = Icons.Outlined.NotificationsOff,
-            contentDescription = null,
+            contentDescription = "Notifications are disabled",
             tint = ember,
             modifier = Modifier.size(22.dp)
         )
@@ -343,7 +363,7 @@ private fun ExactAlarmsOffBanner(onEnable: () -> Unit) {
     ) {
         Icon(
             imageVector = Icons.Outlined.Alarm,
-            contentDescription = null,
+            contentDescription = "Exact alarms are disabled",
             tint = ember,
             modifier = Modifier.size(22.dp)
         )
@@ -388,7 +408,8 @@ private fun FlowRow(
     onClassClick: (Long) -> Unit,
     onDeadlineClick: (Long) -> Unit,
     onStudyClick: (Long) -> Unit,
-    onPersonalClick: (Long) -> Unit = {}
+    onPersonalClick: (Long) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     val isPast = item.startMinutes < nowMinutes && when (item) {
         is TodayFlow.Item.ClassItem -> item.endMinutes < nowMinutes
@@ -404,7 +425,7 @@ private fun FlowRow(
     val courseColor = item.course?.colorArgb?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .alpha(opacity),
         verticalAlignment = Alignment.Top
@@ -563,7 +584,7 @@ private fun ClassCard(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Place,
-                    contentDescription = null,
+                    contentDescription = "Location",
                     modifier = Modifier.size(13.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -627,7 +648,7 @@ private fun StudyCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(
                     imageVector = Icons.Outlined.Timer,
-                    contentDescription = null,
+                    contentDescription = "Study session",
                     modifier = Modifier.size(14.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -696,6 +717,53 @@ private fun QuickCaptureFab(
             contentDescription = "Quick capture",
             tint = Color.White,
             modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+@Composable
+private fun BatteryOptimizationBanner(onEnable: () -> Unit) {
+    val ember = MaterialTheme.lamla.gradients.emberGlow
+    val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerLg)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .glow(ember, shape, radius = 14.dp, alpha = 0.32f)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
+            .border(1.dp, ember.copy(alpha = 0.5f), shape)
+            .clickable(onClick = onEnable)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.BatteryAlert,
+            contentDescription = "Battery optimization is on",
+            tint = ember,
+            modifier = Modifier.size(22.dp)
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = "Battery optimization active",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Reminders might be delayed by the OS. Disable optimization for reliable alerts.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = "Fix",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = ember
         )
     }
 }
