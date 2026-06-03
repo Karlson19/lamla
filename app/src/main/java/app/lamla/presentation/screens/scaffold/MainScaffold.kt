@@ -9,13 +9,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Assignment
+import androidx.compose.material.icons.automirrored.outlined.EventNote
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -40,7 +49,9 @@ import app.lamla.presentation.screens.home.HomeScreen
 import app.lamla.presentation.screens.settings.SettingsScreen
 import app.lamla.presentation.screens.study.StudyHubScreen
 import app.lamla.presentation.screens.timetable.TimetableScreen
+import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.lamla
+import kotlinx.coroutines.launch
 
 /**
  * Vertical room the floating bottom nav needs *above* the system navigation inset:
@@ -92,6 +103,8 @@ private enum class Tab(val label: String, val icon: ImageVector, val activeIcon:
 fun MainScaffold(rootNavController: NavController) {
     var selected by rememberSaveable { mutableStateOf(Tab.Today) }
     val haptic = LocalHapticFeedback.current
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     // Hoisted out of transitionSpec below - that lambda is not @Composable, so it
     // can't read the @Composable `MaterialTheme.lamla.motion` getter directly.
@@ -99,70 +112,101 @@ fun MainScaffold(rootNavController: NavController) {
     val medium2 = motion.medium2
     val short4 = motion.short4
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Screen content - animated between tabs.
-        AnimatedContent(
-            targetState = selected,
-            modifier = Modifier.fillMaxSize(),
-            transitionSpec = {
-                val forward = targetState.ordinal > initialState.ordinal
-                val direction = if (forward) Left else Right
-                (fadeIn(animationSpec = tween(medium2)) +
-                    slideIntoContainer(direction, tween(medium2)))
-                    .togetherWith(
-                        fadeOut(animationSpec = tween(short4)) +
-                            slideOutOfContainer(direction, tween(medium2))
-                    )
-            },
-            label = "tab-content"
-        ) { tab ->
-            when (tab) {
-                Tab.Today -> HomeScreen(
-                    onOpenDeadlines = { rootNavController.navigate(Route.Deadlines) },
-                    onAddCapture = { /* opens quick-capture sheet - wired in HomeScreen */ },
-                    onClassClick = { id -> rootNavController.navigate(Route.ClassEdit(id)) },
-                    onDeadlineClick = { id -> rootNavController.navigate(Route.DeadlineEdit(id)) },
-                    onStartPomodoro = { rootNavController.navigate(Route.Pomodoro) },
-                    onScheduleEvent = { rootNavController.navigate(Route.PersonalEventEdit()) },
-                    onPersonalEventClick = { id -> rootNavController.navigate(Route.PersonalEventEdit(id)) }
-                )
-                Tab.Timetable -> TimetableScreen(
-                    onAddClass = { rootNavController.navigate(Route.ClassEdit()) },
-                    onClassClick = { id -> rootNavController.navigate(Route.ClassEdit(id)) }
-                )
-                Tab.Courses -> CoursesScreen(
-                    onCourseClick = { id -> rootNavController.navigate(Route.CourseDetail(id)) },
-                    onAddCourse = { rootNavController.navigate(Route.CourseEdit()) },
-                    onOpenLecturers = { rootNavController.navigate(Route.Lecturers) },
-                    onOpenGrades = { rootNavController.navigate(Route.Grades) }
-                )
-                Tab.Study -> StudyHubScreen(
-                    onStartPomodoro = { rootNavController.navigate(Route.Pomodoro) },
-                    onOpenExamMode = { rootNavController.navigate(Route.ExamMode) }
-                )
-                Tab.Settings -> SettingsScreen(
-                    onNotificationSettings = { rootNavController.navigate(Route.NotificationSettings) },
-                    onBatteryGuide = { rootNavController.navigate(Route.BatteryGuide) },
-                    onDataExportImport = { rootNavController.navigate(Route.DataExportImport) },
-                    onDiagnostics = { rootNavController.navigate(Route.Diagnostics) }
-                )
-            }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            LamlaDrawerSheet(
+                selected = selected,
+                onSelectTab = { tab ->
+                    if (tab != selected) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    selected = tab
+                    scope.launch { drawerState.close() }
+                },
+                onNavigate = { route ->
+                    scope.launch { drawerState.close() }
+                    rootNavController.navigate(route)
+                }
+            )
         }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Screen content - animated between tabs.
+            AnimatedContent(
+                targetState = selected,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    val forward = targetState.ordinal > initialState.ordinal
+                    val direction = if (forward) Left else Right
+                    (fadeIn(animationSpec = tween(medium2)) +
+                        slideIntoContainer(direction, tween(medium2)))
+                        .togetherWith(
+                            fadeOut(animationSpec = tween(short4)) +
+                                slideOutOfContainer(direction, tween(medium2))
+                        )
+                },
+                label = "tab-content"
+            ) { tab ->
+                when (tab) {
+                    Tab.Today -> HomeScreen(
+                        onOpenDeadlines = { rootNavController.navigate(Route.Deadlines) },
+                        onAddCapture = { /* opens quick-capture sheet - wired in HomeScreen */ },
+                        onClassClick = { id -> rootNavController.navigate(Route.ClassEdit(id)) },
+                        onDeadlineClick = { id -> rootNavController.navigate(Route.DeadlineEdit(id)) },
+                        onStartPomodoro = { rootNavController.navigate(Route.Pomodoro) },
+                        onScheduleEvent = { rootNavController.navigate(Route.PersonalEventEdit()) },
+                        onPersonalEventClick = { id -> rootNavController.navigate(Route.PersonalEventEdit(id)) }
+                    )
+                    Tab.Timetable -> TimetableScreen(
+                        onAddClass = { rootNavController.navigate(Route.ClassEdit()) },
+                        onClassClick = { id -> rootNavController.navigate(Route.ClassEdit(id)) }
+                    )
+                    Tab.Courses -> CoursesScreen(
+                        onCourseClick = { id -> rootNavController.navigate(Route.CourseDetail(id)) },
+                        onAddCourse = { rootNavController.navigate(Route.CourseEdit()) },
+                        onOpenLecturers = { rootNavController.navigate(Route.Lecturers) },
+                        onOpenGrades = { rootNavController.navigate(Route.Grades) }
+                    )
+                    Tab.Study -> StudyHubScreen(
+                        onStartPomodoro = { rootNavController.navigate(Route.Pomodoro) },
+                        onOpenExamMode = { rootNavController.navigate(Route.ExamMode) }
+                    )
+                    Tab.Settings -> SettingsScreen(
+                        onNotificationSettings = { rootNavController.navigate(Route.NotificationSettings) },
+                        onBatteryGuide = { rootNavController.navigate(Route.BatteryGuide) },
+                        onDataExportImport = { rootNavController.navigate(Route.DataExportImport) },
+                        onDiagnostics = { rootNavController.navigate(Route.Diagnostics) }
+                    )
+                }
+            }
 
-        // Floating bottom nav bar
-        FloatingBottomNav(
-            selected = selected,
-            onSelect = {
-                if (it != selected) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                selected = it
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                // Sit above the system navigation bar (gesture pill or 3-button)
-                // so the floating tab bar never merges with the OS nav buttons.
-                .navigationBarsPadding()
-                .padding(bottom = 18.dp, start = 20.dp, end = 20.dp)
-        )
+            // Floating bottom nav bar
+            FloatingBottomNav(
+                selected = selected,
+                onSelect = {
+                    if (it != selected) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    selected = it
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    // Sit above the system navigation bar (gesture pill or 3-button)
+                    // so the floating tab bar never merges with the OS nav buttons.
+                    .navigationBarsPadding()
+                    .padding(bottom = 18.dp, start = 20.dp, end = 20.dp)
+            )
+
+            // Floating hamburger - opens the navigation drawer. Pinned top-end so it
+            // clears the left-aligned editorial headers on every tab screen.
+            FloatingMenuButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    scope.launch { drawerState.open() }
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, end = 20.dp)
+            )
+        }
     }
 }
 
@@ -252,5 +296,126 @@ private fun NavItem(
                 )
             }
         }
+    }
+}
+
+/**
+ * Slide-in navigation drawer (the "hamburger").
+ *
+ * Surfaces *every* destination - including the ones otherwise buried a tap or two
+ * deep inside a tab (Deadlines, Lecturers, Grades, Exam mode) - so nothing in the
+ * app is hidden behind the five-tab bar. Tapping a primary destination switches the
+ * bottom-nav tab; tapping a secondary one pushes its screen above the scaffold.
+ */
+@Composable
+private fun LamlaDrawerSheet(
+    selected: Tab,
+    onSelectTab: (Tab) -> Unit,
+    onNavigate: (Route) -> Unit
+) {
+    val cs = MaterialTheme.colorScheme
+    ModalDrawerSheet(
+        drawerContainerColor = cs.surface,
+        drawerShape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Brand mark
+            Column(modifier = Modifier.padding(start = 6.dp, top = 12.dp, bottom = 12.dp)) {
+                Text(
+                    text = "LAMLA",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = cs.primary
+                )
+                Text(
+                    text = "Last-minute learners, sorted.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = cs.onSurfaceVariant
+                )
+            }
+
+            SectionLabel(text = "Navigate", modifier = Modifier.padding(start = 6.dp, top = 4.dp))
+            DrawerItem(Icons.Outlined.WbSunny, "Today", selected == Tab.Today) { onSelectTab(Tab.Today) }
+            DrawerItem(Icons.Outlined.CalendarMonth, "Timetable", selected == Tab.Timetable) { onSelectTab(Tab.Timetable) }
+            DrawerItem(Icons.AutoMirrored.Outlined.MenuBook, "Courses", selected == Tab.Courses) { onSelectTab(Tab.Courses) }
+            DrawerItem(Icons.Outlined.Timer, "Study", selected == Tab.Study) { onSelectTab(Tab.Study) }
+
+            SectionLabel(text = "Academics", modifier = Modifier.padding(start = 6.dp, top = 12.dp))
+            DrawerItem(Icons.AutoMirrored.Outlined.EventNote, "Deadlines") { onNavigate(Route.Deadlines) }
+            DrawerItem(Icons.Outlined.Person, "Lecturers") { onNavigate(Route.Lecturers) }
+            DrawerItem(Icons.Outlined.School, "Grades & CWA") { onNavigate(Route.Grades) }
+            DrawerItem(Icons.AutoMirrored.Outlined.Assignment, "Exam mode") { onNavigate(Route.ExamMode) }
+
+            SectionLabel(text = "More", modifier = Modifier.padding(start = 6.dp, top = 12.dp))
+            DrawerItem(Icons.Outlined.Tune, "Settings", selected == Tab.Settings) { onSelectTab(Tab.Settings) }
+        }
+    }
+}
+
+/** A single drawer row. Selected rows invert (filled pill) like the bottom-nav active tab. */
+@Composable
+private fun DrawerItem(
+    icon: ImageVector,
+    label: String,
+    selected: Boolean = false,
+    onClick: () -> Unit
+) {
+    val cs = MaterialTheme.colorScheme
+    val motion = MaterialTheme.lamla.motion
+    val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerMd)
+    val bg by animateColorAsState(
+        targetValue = if (selected) cs.onSurface else Color.Transparent,
+        animationSpec = motion.tweenStandard(motion.medium2),
+        label = "drawer-bg"
+    )
+    val fg by animateColorAsState(
+        targetValue = if (selected) cs.surface else cs.onSurface,
+        animationSpec = motion.tweenStandard(motion.medium2),
+        label = "drawer-fg"
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(bg, shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(22.dp))
+        Text(text = label, style = MaterialTheme.typography.bodyLarge, color = fg, maxLines = 1)
+    }
+}
+
+/** Floating circular hamburger that opens the drawer - matches the floating bottom-nav language. */
+@Composable
+private fun FloatingMenuButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val cs = MaterialTheme.colorScheme
+    Box(
+        modifier = modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(cs.surfaceContainerLow, CircleShape)
+            .border(1.dp, MaterialTheme.lamla.colors.hairline, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Menu,
+            contentDescription = "Open navigation menu",
+            tint = cs.onSurface,
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
