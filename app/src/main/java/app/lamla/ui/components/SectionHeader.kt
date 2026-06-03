@@ -1,7 +1,9 @@
 package app.lamla.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,8 +52,10 @@ fun ScreenHeader(
     subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
-    androidx.compose.foundation.layout.Column(
-        modifier = modifier.padding(bottom = MaterialTheme.lamla.spacing.md),
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = MaterialTheme.lamla.spacing.md),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Text(

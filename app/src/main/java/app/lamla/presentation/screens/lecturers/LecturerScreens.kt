@@ -266,6 +266,8 @@ fun LecturerEditScreen(
     LaunchedEffect(lecturerId) { viewModel.load(lecturerId) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    // Which office-hour slot's time is being edited: index to isStart (true = start, false = end).
+    var editingSlot by remember { mutableStateOf<Pair<Int, Boolean>?>(null) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
@@ -297,18 +299,22 @@ fun LecturerEditScreen(
             LamlaField("Notes") { LamlaTextField(state.notes, viewModel::setNotes, "Anything worth remembering", singleLine = false, minLines = 2, maxLines = 4) }
 
             LamlaField("Office hours") {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (state.officeHours.isEmpty()) {
+                        Text(
+                            "No office hours yet. Add one, then pick the day and time.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     state.officeHours.forEachIndexed { idx, slot ->
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                slot.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3).uppercase(),
-                                style = LamlaTextStyles.SectionLabel
-                            )
-                            Text("%02d:%02d–%02d:%02d".format(slot.startMinutes / 60, slot.startMinutes % 60, slot.endMinutes / 60, slot.endMinutes % 60), style = LamlaTextStyles.Metric)
-                            IconButton(onClick = { viewModel.removeOfficeHour(idx) }) {
-                                Icon(Icons.Outlined.Close, contentDescription = "Remove", modifier = Modifier.size(14.dp))
-                            }
-                        }
+                        OfficeHourEditor(
+                            slot = slot,
+                            onDayChange = { viewModel.setOfficeHourDay(idx, it) },
+                            onStartClick = { editingSlot = idx to true },
+                            onEndClick = { editingSlot = idx to false },
+                            onRemove = { viewModel.removeOfficeHour(idx) }
+                        )
                     }
                     LamlaSecondaryButton(label = "Add office hour", leadingIcon = Icons.Outlined.Add, onClick = { viewModel.addOfficeHourSlot() })
                 }
@@ -324,4 +330,93 @@ fun LecturerEditScreen(
             }
         }
     }
+
+    // Time picker for whichever office-hour slot the user tapped.
+    editingSlot?.let { (idx, isStart) ->
+        val slot = state.officeHours.getOrNull(idx)
+        if (slot == null) {
+            editingSlot = null
+        } else {
+            OfficeHourTimePicker(
+                initialMinutes = if (isStart) slot.startMinutes else slot.endMinutes,
+                onPick = { mins ->
+                    if (isStart) viewModel.setOfficeHourStart(idx, mins) else viewModel.setOfficeHourEnd(idx, mins)
+                    editingSlot = null
+                },
+                onDismiss = { editingSlot = null }
+            )
+        }
+    }
+}
+
+/** One editable office-hour slot: day chips + start/end time buttons + remove. */
+@Composable
+private fun OfficeHourEditor(
+    slot: app.lamla.domain.model.OfficeHourSlot,
+    onDayChange: (DayOfWeek) -> Unit,
+    onStartClick: () -> Unit,
+    onEndClick: () -> Unit,
+    onRemove: () -> Unit
+) {
+    val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerMd)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
+            .border(1.dp, MaterialTheme.lamla.colors.hairline, shape)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            DayOfWeek.entries.forEach { d ->
+                LamlaChip(
+                    label = d.getDisplayName(TextStyle.SHORT, Locale.getDefault()).take(3).uppercase(),
+                    selected = d == slot.dayOfWeek,
+                    onClick = { onDayChange(d) }
+                )
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LamlaSecondaryButton(
+                label = "%02d:%02d".format(slot.startMinutes / 60, slot.startMinutes % 60),
+                leadingIcon = Icons.Outlined.Schedule,
+                onClick = onStartClick,
+                modifier = Modifier.weight(1f)
+            )
+            Text("to", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LamlaSecondaryButton(
+                label = "%02d:%02d".format(slot.endMinutes / 60, slot.endMinutes % 60),
+                leadingIcon = Icons.Outlined.Schedule,
+                onClick = onEndClick,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Outlined.Close, contentDescription = "Remove office hour", modifier = Modifier.size(16.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OfficeHourTimePicker(
+    initialMinutes: Int,
+    onPick: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val timeState = rememberTimePickerState(
+        initialHour = initialMinutes / 60,
+        initialMinute = initialMinutes % 60,
+        is24Hour = true
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = { onPick(timeState.hour * 60 + timeState.minute) }) { Text("OK") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        text = { TimePicker(state = timeState) }
+    )
 }

@@ -126,6 +126,40 @@ class LecturerEditViewModel @Inject constructor(
         }
     }
 
+    fun setOfficeHourDay(index: Int, day: DayOfWeek) {
+        _state.update {
+            val list = it.officeHours.toMutableList()
+            if (index in list.indices) list[index] = list[index].copy(dayOfWeek = day)
+            it.copy(officeHours = list)
+        }
+    }
+
+    /** Set a slot's start. Keep end at least 30 min after start (nudge it if needed). */
+    fun setOfficeHourStart(index: Int, minutes: Int) {
+        _state.update {
+            val list = it.officeHours.toMutableList()
+            if (index in list.indices) {
+                val slot = list[index]
+                val end = if (slot.endMinutes <= minutes) (minutes + 60).coerceAtMost(23 * 60 + 59) else slot.endMinutes
+                list[index] = slot.copy(startMinutes = minutes, endMinutes = end)
+            }
+            it.copy(officeHours = list)
+        }
+    }
+
+    /** Set a slot's end. Refuse to go at/below start (nudge up to start + 30 min). */
+    fun setOfficeHourEnd(index: Int, minutes: Int) {
+        _state.update {
+            val list = it.officeHours.toMutableList()
+            if (index in list.indices) {
+                val slot = list[index]
+                val end = if (minutes <= slot.startMinutes) (slot.startMinutes + 30).coerceAtMost(23 * 60 + 59) else minutes
+                list[index] = slot.copy(endMinutes = end)
+            }
+            it.copy(officeHours = list)
+        }
+    }
+
     suspend fun save(): Boolean {
         val s = _state.value
         if (!s.canSave) return false
