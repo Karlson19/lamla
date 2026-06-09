@@ -159,3 +159,39 @@ data class Semester(
     val endDateEpochMs: Long,
     val isActive: Boolean = false
 )
+
+enum class AttendanceStatus { Present, Late, Absent, Excused }
+
+/**
+ * Attendance for one *occurrence* of a class — a class session on a specific date.
+ *
+ * [dateEpochDay] is `LocalDate.toEpochDay()`: the calendar day the class was held,
+ * timezone-free. A (classSessionId, dateEpochDay) pair is unique — you can only have
+ * one verdict per class meeting. [auto] is true when a geofence marked it for you.
+ */
+@Serializable
+data class AttendanceRecord(
+    val id: Long = 0,
+    val classSessionId: Long,
+    val courseId: Long,
+    val dateEpochDay: Long,
+    val status: AttendanceStatus,
+    val markedAtEpochMs: Long,
+    val auto: Boolean = false
+)
+
+/**
+ * A pinned GPS location for a venue (lecture hall). Venues live as free-text on class
+ * sessions; this anchors a venue *name* to coordinates so geofencing can auto-mark
+ * attendance when you arrive. [venueKey] is the normalized (lowercased, trimmed) venue
+ * string — the join key — while [displayName] keeps the human spelling last seen.
+ */
+@Serializable
+data class VenueLocation(
+    val id: Long = 0,
+    val venueKey: String,
+    val displayName: String,
+    val latitude: Double,
+    val longitude: Double,
+    val radiusMeters: Float = 130f
+)

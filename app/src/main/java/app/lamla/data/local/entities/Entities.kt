@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import app.lamla.domain.model.AttendanceStatus
 import app.lamla.domain.model.CaptureType
 import app.lamla.domain.model.DeadlineStatus
 import app.lamla.domain.model.OfficeHourSlot
@@ -223,4 +224,49 @@ data class ExamEntity(
     val venue: String,
     val topics: List<String>,
     val pastPaperPaths: List<String>
+)
+
+@Entity(
+    tableName = "attendance_records",
+    foreignKeys = [
+        ForeignKey(
+            entity = CourseEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["courseId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ClassSessionEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["classSessionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index("courseId"),
+        // One verdict per class meeting.
+        Index(value = ["classSessionId", "dateEpochDay"], unique = true)
+    ]
+)
+data class AttendanceRecordEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val classSessionId: Long,
+    val courseId: Long,
+    val dateEpochDay: Long,
+    val status: AttendanceStatus,
+    val markedAtEpochMs: Long,
+    @ColumnInfo(defaultValue = "0") val auto: Boolean = false
+)
+
+@Entity(
+    tableName = "venue_locations",
+    indices = [Index(value = ["venueKey"], unique = true)]
+)
+data class VenueLocationEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val venueKey: String,
+    val displayName: String,
+    val latitude: Double,
+    val longitude: Double,
+    val radiusMeters: Float
 )

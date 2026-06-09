@@ -1,6 +1,7 @@
 package app.lamla.data.local
 
 import androidx.room.TypeConverter
+import app.lamla.domain.model.AttendanceStatus
 import app.lamla.domain.model.CaptureType
 import app.lamla.domain.model.DeadlineStatus
 import app.lamla.domain.model.OfficeHourSlot
@@ -36,6 +37,12 @@ class Converters {
 
     @TypeConverter
     fun stringToCaptureType(value: String?): CaptureType? = value?.let { CaptureType.valueOf(it) }
+
+    @TypeConverter
+    fun attendanceToString(value: AttendanceStatus?): String? = value?.name
+
+    @TypeConverter
+    fun stringToAttendance(value: String?): AttendanceStatus? = value?.let { AttendanceStatus.valueOf(it) }
 
     @TypeConverter
     fun intListToJson(value: List<Int>?): String =

@@ -37,4 +37,6 @@ object DataModule {
     @Provides fun provideStudySessionDao(db: AppDatabase): StudySessionDao = db.studySessionDao()
     @Provides fun provideCaptureDao(db: AppDatabase): CaptureDao = db.captureDao()
     @Provides fun provideExamDao(db: AppDatabase): ExamDao = db.examDao()
+    @Provides fun provideAttendanceDao(db: AppDatabase): AttendanceDao = db.attendanceDao()
+    @Provides fun provideVenueLocationDao(db: AppDatabase): VenueLocationDao = db.venueLocationDao()
 }

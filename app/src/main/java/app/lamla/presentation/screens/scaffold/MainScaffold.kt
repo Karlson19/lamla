@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Assignment
 import androidx.compose.material.icons.automirrored.outlined.EventNote
+import androidx.compose.material.icons.automirrored.outlined.FactCheck
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.DrawerValue
@@ -351,6 +352,7 @@ private fun LamlaDrawerSheet(
             DrawerItem(Icons.AutoMirrored.Outlined.EventNote, "Deadlines") { onNavigate(Route.Deadlines) }
             DrawerItem(Icons.Outlined.Person, "Lecturers") { onNavigate(Route.Lecturers) }
             DrawerItem(Icons.Outlined.School, "Grades & CWA") { onNavigate(Route.Grades) }
+            DrawerItem(Icons.AutoMirrored.Outlined.FactCheck, "Attendance") { onNavigate(Route.Attendance) }
             DrawerItem(Icons.AutoMirrored.Outlined.Assignment, "Exam mode") { onNavigate(Route.ExamMode) }
 
             SectionLabel(text = "More", modifier = Modifier.padding(start = 6.dp, top = 12.dp))

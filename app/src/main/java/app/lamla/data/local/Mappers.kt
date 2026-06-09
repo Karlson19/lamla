@@ -110,3 +110,25 @@ internal fun Semester.toEntity() = SemesterEntity(
     id = id, name = name, startDateEpochMs = startDateEpochMs,
     endDateEpochMs = endDateEpochMs, isActive = isActive
 )
+
+// AttendanceRecord
+internal fun AttendanceRecordEntity.toDomain() = AttendanceRecord(
+    id = id, classSessionId = classSessionId, courseId = courseId,
+    dateEpochDay = dateEpochDay, status = status,
+    markedAtEpochMs = markedAtEpochMs, auto = auto
+)
+internal fun AttendanceRecord.toEntity() = AttendanceRecordEntity(
+    id = id, classSessionId = classSessionId, courseId = courseId,
+    dateEpochDay = dateEpochDay, status = status,
+    markedAtEpochMs = markedAtEpochMs, auto = auto
+)
+
+// VenueLocation
+internal fun VenueLocationEntity.toDomain() = VenueLocation(
+    id = id, venueKey = venueKey, displayName = displayName,
+    latitude = latitude, longitude = longitude, radiusMeters = radiusMeters
+)
+internal fun VenueLocation.toEntity() = VenueLocationEntity(
+    id = id, venueKey = venueKey, displayName = displayName,
+    latitude = latitude, longitude = longitude, radiusMeters = radiusMeters
+)

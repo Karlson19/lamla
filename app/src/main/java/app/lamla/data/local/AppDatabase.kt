@@ -17,9 +17,11 @@ import app.lamla.data.local.entities.*
         PersonalEventEntity::class,
         StudySessionEntity::class,
         CaptureEntity::class,
-        ExamEntity::class
+        ExamEntity::class,
+        AttendanceRecordEntity::class,
+        VenueLocationEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -34,4 +36,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun studySessionDao(): StudySessionDao
     abstract fun captureDao(): CaptureDao
     abstract fun examDao(): ExamDao
+    abstract fun attendanceDao(): AttendanceDao
+    abstract fun venueLocationDao(): VenueLocationDao
 }

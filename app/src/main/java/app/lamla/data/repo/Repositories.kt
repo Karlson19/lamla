@@ -133,3 +133,29 @@ class SemesterRepository @Inject constructor(private val dao: SemesterDao) {
     suspend fun upsert(semester: Semester): Long = dao.upsert(semester.toEntity())
     suspend fun setActive(id: Long) = dao.setActive(id)
 }
+
+@Singleton
+class AttendanceRepository @Inject constructor(private val dao: AttendanceDao) {
+    fun observeAll(): Flow<List<AttendanceRecord>> = dao.observeAll().map { it.map { e -> e.toDomain() } }
+    fun observeForCourse(courseId: Long): Flow<List<AttendanceRecord>> =
+        dao.observeForCourse(courseId).map { it.map { e -> e.toDomain() } }
+    suspend fun forOccurrence(sessionId: Long, dateEpochDay: Long): AttendanceRecord? =
+        dao.forOccurrence(sessionId, dateEpochDay)?.toDomain()
+    suspend fun all(): List<AttendanceRecord> = dao.all().map { it.toDomain() }
+    suspend fun upsert(record: AttendanceRecord): Long = dao.upsert(record.toEntity())
+    suspend fun clearOccurrence(sessionId: Long, dateEpochDay: Long) = dao.clearOccurrence(sessionId, dateEpochDay)
+}
+
+@Singleton
+class VenueLocationRepository @Inject constructor(private val dao: VenueLocationDao) {
+    fun observeAll(): Flow<List<VenueLocation>> = dao.observeAll().map { it.map { e -> e.toDomain() } }
+    suspend fun getByKey(key: String): VenueLocation? = dao.getByKey(key)?.toDomain()
+    suspend fun all(): List<VenueLocation> = dao.all().map { it.toDomain() }
+    suspend fun upsert(venue: VenueLocation): Long = dao.upsert(venue.toEntity())
+    suspend fun deleteByKey(key: String) = dao.deleteByKey(key)
+
+    /** Normalize a free-text venue name into the join key used by geofences. */
+    companion object {
+        fun keyOf(venue: String): String = venue.trim().lowercase()
+    }
+}

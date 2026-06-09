@@ -25,6 +25,7 @@ sealed interface Route {
     @Serializable data object Deadlines : Route
     @Serializable data object Lecturers : Route
     @Serializable data object Grades : Route
+    @Serializable data object Attendance : Route
     @Serializable data class PersonalEventEdit(val eventId: Long? = null) : Route
     @Serializable data object Pomodoro : Route
     @Serializable data class StudySessionEdit(val sessionId: Long? = null) : Route

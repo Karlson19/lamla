@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import app.lamla.attendance.GeofenceManager
 import app.lamla.data.prefs.AppPreferences
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -29,11 +30,15 @@ class RescheduleAllWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters,
     private val engine: ReminderEngine,
-    private val prefs: AppPreferences
+    private val prefs: AppPreferences,
+    private val geofenceManager: GeofenceManager
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result = runCatching {
         engine.rescheduleAll()
+        // Geofences are lost across reboot/app-update just like alarms — re-register
+        // them on the same heartbeat so attendance auto-marking survives a restart.
+        runCatching { geofenceManager.refresh() }
         val now = System.currentTimeMillis()
         prefs.setLastRescheduleAt(now)
         if (inputData.getString(KEY_TRIGGER) == TRIGGER_BOOT) {
