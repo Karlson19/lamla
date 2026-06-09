@@ -206,4 +206,133 @@ object GradeProjection {
         val needed = ((targetCwa.toDouble() * total - basePoints) / semesterCredits).toFloat()
         return ProjectionResult.Success(needed)
     }
+
+    // --- Target engine: solve the effort a goal demands ------------------------
+
+    /**
+     * Per-course facts the target solver needs. [pointsEarned] and [gradedWeight] come
+     * straight off a [CourseStanding]; the rest identify the course for the UI.
+     */
+    data class TargetCourseInput(
+        val courseId: Long,
+        val code: String,
+        val name: String,
+        val colorArgb: Int,
+        val credits: Int,
+        val gradedWeight: Float,
+        val pointsEarned: Float
+    )
+
+    /**
+     * One course inside a target plan: what's banked, what's still up for grabs, and
+     * where the course finishes if you hit the plan's required effort.
+     */
+    data class TargetLine(
+        val courseId: Long,
+        val code: String,
+        val name: String,
+        val colorArgb: Int,
+        val credits: Int,
+        /** Weight (% of the 100-pt course) already graded. */
+        val gradedWeight: Float,
+        /** Points banked out of 100 from graded work so far. */
+        val pointsEarned: Float,
+        /** The rest of the course still earnable: 100 − gradedWeight. */
+        val influenceableWeight: Float,
+        /** Final course mark if you score the plan's required % on everything left. */
+        val projectedFinishMark: Float,
+        /** Nothing left to influence — this course's mark is locked. */
+        val locked: Boolean
+    )
+
+    /** The verdict of a target plan. */
+    sealed interface TargetOutcome {
+        /** Score at least [percentOnRemaining] (0..100) on every ungraded portion left. */
+        data class Reachable(val percentOnRemaining: Float) : TargetOutcome
+        /** Already banked: even zero on everything left lands the goal. [floorCwa] is the worst case. */
+        data class Secured(val floorCwa: Float) : TargetOutcome
+        /** Unreachable this term; [bestCwa]/[bestClass] is the ceiling (100% on all that's left). */
+        data class OutOfReach(val bestCwa: Float, val bestClass: DegreeClass) : TargetOutcome
+        /** No credits / courses to plan over. */
+        data object NoData : TargetOutcome
+    }
+
+    data class TargetPlan(
+        val targetCwa: Float,
+        val targetClass: DegreeClass,
+        /** Semester average this plan demands. */
+        val requiredSwa: Float,
+        val outcome: TargetOutcome,
+        val lines: List<TargetLine>
+    )
+
+    /**
+     * Solve the uniform effort needed across every *ungraded* portion of this semester's
+     * courses to land [targetCwa] cumulatively, given the prior standing.
+     *
+     * Model: each course finishes at  pointsEarned + (100 − gradedWeight) · X/100, where
+     * X is a single shared "score on everything still outstanding". We solve the
+     * credit-weighted CWA = [targetCwa] for X, then read each course's finish mark back.
+     * Unlike [CourseStanding.remainingWeight] (only *entered* assessments), this treats the
+     * whole rest of each course as still earnable — the right assumption for "what do I
+     * need overall", since every course ultimately marks out of 100.
+     */
+    fun planForTarget(
+        targetCwa: Float,
+        priorCwa: Float?,
+        priorCredits: Int,
+        courses: List<TargetCourseInput>
+    ): TargetPlan {
+        val targetClass = classOf(targetCwa)
+        val semCredits = courses.sumOf { it.credits }
+        if (semCredits == 0) {
+            return TargetPlan(targetCwa, targetClass, targetCwa, TargetOutcome.NoData, emptyList())
+        }
+        val baseCredits = if (priorCwa != null) priorCredits else 0
+        val basePoints = if (priorCwa != null) priorCwa.toDouble() * priorCredits else 0.0
+        val totalCredits = baseCredits + semCredits
+        val requiredSwa = ((targetCwa.toDouble() * totalCredits - basePoints) / semCredits).toFloat()
+
+        fun influenceable(c: TargetCourseInput) = (100f - c.gradedWeight).coerceIn(0f, 100f)
+
+        // Σ banked points and Σ influenceable capacity, both credit-weighted.
+        val bankedWeighted = courses.sumOf { it.pointsEarned.toDouble() * it.credits }
+        val capacityWeighted = courses.sumOf { influenceable(it).toDouble() * it.credits }
+        val neededSemPoints = requiredSwa.toDouble() * semCredits
+
+        // X = % needed on all remaining work (one shared effort level). Null = nothing left.
+        val rawX: Float? = if (capacityWeighted <= 0.0001) null
+            else (100.0 * (neededSemPoints - bankedWeighted) / capacityWeighted).toFloat()
+
+        fun cwaAt(xEff: Float): Float {
+            val semPoints = courses.sumOf { c ->
+                (c.pointsEarned + influenceable(c) * xEff / 100f).toDouble() * c.credits
+            }
+            return ((basePoints + semPoints) / totalCredits).toFloat()
+        }
+        fun linesAt(xEff: Float) = courses.map { c ->
+            val inf = influenceable(c)
+            TargetLine(
+                courseId = c.courseId, code = c.code, name = c.name, colorArgb = c.colorArgb,
+                credits = c.credits, gradedWeight = c.gradedWeight, pointsEarned = c.pointsEarned,
+                influenceableWeight = inf,
+                projectedFinishMark = (c.pointsEarned + inf * xEff / 100f).coerceIn(0f, 100f),
+                locked = inf <= 0.01f
+            )
+        }
+
+        val outcome: TargetOutcome = when {
+            rawX == null -> {
+                // Everything locked: compare the final (banked) CWA to the goal.
+                val finalCwa = cwaAt(0f)
+                if (finalCwa + 0.05f >= targetCwa) TargetOutcome.Secured(finalCwa)
+                else TargetOutcome.OutOfReach(finalCwa, classOf(finalCwa))
+            }
+            rawX <= 0f -> TargetOutcome.Secured(cwaAt(0f))
+            rawX > 100f -> cwaAt(100f).let { TargetOutcome.OutOfReach(it, classOf(it)) }
+            else -> TargetOutcome.Reachable(rawX)
+        }
+        val xForLines = (rawX ?: 0f).coerceIn(0f, 100f)
+        return TargetPlan(targetCwa, targetClass, requiredSwa, outcome, linesAt(xForLines))
+    }
 }

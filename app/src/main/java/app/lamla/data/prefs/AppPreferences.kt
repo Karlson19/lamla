@@ -52,6 +52,9 @@ class AppPreferences @Inject constructor(
         val pomodoroPhase = stringPreferencesKey("pomodoro_phase")
         val priorCwa = floatPreferencesKey("prior_cwa")
         val priorCredits = intPreferencesKey("prior_credits")
+        val gradeTargetCwa = floatPreferencesKey("grade_target_cwa")
+        val attendanceTarget = floatPreferencesKey("attendance_target")
+        val attendanceAuto = booleanPreferencesKey("attendance_auto")
     }
 
     /**
@@ -184,6 +187,33 @@ class AppPreferences @Inject constructor(
             if (cwa == null) it.remove(Keys.priorCwa) else it[Keys.priorCwa] = cwa.coerceIn(0f, 100f)
             it[Keys.priorCredits] = credits.coerceAtLeast(0)
         }
+    }
+
+    /**
+     * The CWA the student is aiming for (the Target Engine goal). Null = no explicit
+     * goal, so the UI auto-targets the next class of degree up from where they stand.
+     * Stored locally only.
+     */
+    val gradeTargetCwa: Flow<Float?> = context.dataStore.data.map { it[Keys.gradeTargetCwa] }
+    suspend fun setGradeTargetCwa(cwa: Float?) {
+        context.dataStore.edit {
+            if (cwa == null) it.remove(Keys.gradeTargetCwa) else it[Keys.gradeTargetCwa] = cwa.coerceIn(0f, 100f)
+        }
+    }
+
+    /**
+     * Smart-attendance settings. [attendanceTarget] is the rate (0..1) the bunk
+     * calculator aims for — most departments enforce 0.75. [attendanceAutoEnabled]
+     * gates geofence auto-marking; off by default since it needs location access.
+     */
+    val attendanceTarget: Flow<Float> = context.dataStore.data.map { it[Keys.attendanceTarget] ?: 0.75f }
+    suspend fun setAttendanceTarget(value: Float) {
+        context.dataStore.edit { it[Keys.attendanceTarget] = value.coerceIn(0.5f, 1f) }
+    }
+
+    val attendanceAutoEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.attendanceAuto] ?: false }
+    suspend fun setAttendanceAutoEnabled(value: Boolean) {
+        context.dataStore.edit { it[Keys.attendanceAuto] = value }
     }
 
     /** One-shot snapshot (use sparingly - prefer Flow observation). */

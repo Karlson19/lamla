@@ -55,7 +55,13 @@ data class GradesUiState(
      * Active "what-if" overrides: courseId → the hypothetical mark the user dragged to.
      * Drives the slider state and the live re-projection. Empty = showing real projection.
      */
-    val simulatedMarks: Map<Long, Float> = emptyMap()
+    val simulatedMarks: Map<Long, Float> = emptyMap(),
+    /** The goal-driven plan: required effort per course to hit [targetCwa]. */
+    val targetPlan: GradeProjection.TargetPlan? = null,
+    /** The CWA goal currently in effect (explicit or auto next-class). */
+    val targetCwa: Float? = null,
+    /** True when the user set the goal themselves; false when we auto-picked next class up. */
+    val targetIsCustom: Boolean = false
 ) {
     val hasAnyGrades: Boolean get() = courseGrades.any { it.standing.gradedWeight > 0f }
     /** True while any course is being explored hypothetically. */
@@ -119,7 +125,7 @@ class GradesViewModel @Inject constructor(
         )
     }
 
-    val state: StateFlow<GradesUiState> = combine(baseGrades, simulatedMarks) { base, sims ->
+    val state: StateFlow<GradesUiState> = combine(baseGrades, simulatedMarks, prefs.gradeTargetCwa) { base, sims, explicitTarget ->
         // Drop overrides for courses that are no longer projectable (e.g. a grade was
         // removed) so the simulation can't reference a course the user can't see.
         val liveSims = sims.filterKeys { id -> base.semesterMarks.any { it.courseId == id } }
@@ -135,6 +141,29 @@ class GradesViewModel @Inject constructor(
                 as? GradeProjection.ProjectionResult.Success)?.value
         }
 
+        // --- Target engine ---------------------------------------------------
+        // The plan reasons over *real* banked marks (not what-if sims), so the goal
+        // doesn't lurch around while the user drags a slider. The goal in effect is
+        // the user's explicit pick, or—failing that—the next class of degree up from
+        // where they actually stand.
+        val realCwa = (GradeProjection.projectCwa(base.priorCwa, base.priorCredits, base.semesterMarks)
+            as? GradeProjection.ProjectionResult.Success)?.value
+        val resolvedTarget = explicitTarget
+            ?: realCwa?.let { GradeProjection.nextClassTarget(it) ?: GradeProjection.DegreeClass.First.minCwa }
+            ?: GradeProjection.DegreeClass.SecondUpper.minCwa
+        val targetInputs = base.grades.map { cg ->
+            GradeProjection.TargetCourseInput(
+                courseId = cg.course.id,
+                code = cg.course.code,
+                name = cg.course.name,
+                colorArgb = cg.course.colorArgb,
+                credits = cg.course.creditHours,
+                gradedWeight = cg.standing.gradedWeight,
+                pointsEarned = cg.standing.pointsEarned
+            )
+        }
+        val targetPlan = GradeProjection.planForTarget(resolvedTarget, base.priorCwa, base.priorCredits, targetInputs)
+
         GradesUiState(
             loading = false,
             semesterName = base.semesterName,
@@ -147,12 +176,20 @@ class GradesViewModel @Inject constructor(
             nextClassTarget = nextTarget,
             requiredSwaForNextClass = requiredSwa,
             projectedCredits = base.projectedCredits,
-            simulatedMarks = liveSims
+            simulatedMarks = liveSims,
+            targetPlan = targetPlan,
+            targetCwa = resolvedTarget,
+            targetIsCustom = explicitTarget != null
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), GradesUiState())
 
     fun setPriorStanding(cwa: Float?, credits: Int) {
         viewModelScope.launch { prefs.setPriorStanding(cwa, credits) }
+    }
+
+    /** Set the CWA goal the Target Engine plans toward. Null reverts to auto next-class. */
+    fun setTargetCwa(cwa: Float?) {
+        viewModelScope.launch { prefs.setGradeTargetCwa(cwa) }
     }
 
     /** Drag a course to a hypothetical mark and watch the CWA re-project live. */

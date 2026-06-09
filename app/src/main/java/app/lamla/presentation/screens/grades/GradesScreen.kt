@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +37,7 @@ fun GradesScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showPriorEdit by remember { mutableStateOf(false) }
+    var showGoalPicker by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
@@ -77,8 +80,10 @@ fun GradesScreen(
                 }
             } else {
                 item { ProjectionHero(state, onResetAll = { viewModel.resetSimulation() }) }
-                if (state.requiredSwaForNextClass != null && state.nextClassTarget != null) {
-                    item { NextClassHint(state) }
+                state.targetPlan?.let { plan ->
+                    if (plan.outcome !is GradeProjection.TargetOutcome.NoData) {
+                        item { TargetCard(state, plan, onEditGoal = { showGoalPicker = true }) }
+                    }
                 }
             }
 
@@ -110,6 +115,15 @@ fun GradesScreen(
             initialCredits = state.priorCredits,
             onSave = { cwa, credits -> viewModel.setPriorStanding(cwa, credits); showPriorEdit = false },
             onDismiss = { showPriorEdit = false }
+        )
+    }
+
+    if (showGoalPicker) {
+        GoalPickerDialog(
+            currentTarget = state.targetCwa,
+            isCustom = state.targetIsCustom,
+            onSave = { cwa -> viewModel.setTargetCwa(cwa); showGoalPicker = false },
+            onDismiss = { showGoalPicker = false }
         )
     }
 }
@@ -202,19 +216,209 @@ private fun MetricBlock(label: String, value: String, sub: String, alignEnd: Boo
     }
 }
 
+// --- Target engine ----------------------------------------------------------
+
+/**
+ * The goal-driven plan. Reverses the projection: pick a class/CWA, and this works out
+ * the single effort level you need on everything still outstanding to land it — then
+ * shows where each course finishes if you hold that line.
+ */
 @Composable
-private fun NextClassHint(state: GradesUiState) {
-    val target = state.nextClassTarget ?: return
-    val req = state.requiredSwaForNextClass ?: return
-    val nextLabel = GradeProjection.classOf(target).label
-    val message = when {
-        req > 100f -> "$nextLabel is out of reach this semester — keep banking marks and revisit next term."
-        req <= 0f -> "You're already on track for $nextLabel."
-        else -> "Average ${fmt(req)} across this semester's ${state.projectedCredits} credits to reach $nextLabel."
+private fun TargetCard(
+    state: GradesUiState,
+    plan: GradeProjection.TargetPlan,
+    onEditGoal: () -> Unit
+) {
+    val cs = MaterialTheme.colorScheme
+    LamlaSurface(modifier = Modifier.fillMaxWidth(), color = cs.surfaceContainerLow) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Header — tappable to change the goal.
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onEditGoal),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        if (state.targetIsCustom) "YOUR GOAL" else "AIM · NEXT CLASS",
+                        style = LamlaTextStyles.SectionLabel,
+                        color = cs.onSurfaceVariant
+                    )
+                    Text(
+                        "${plan.targetClass.label} · ${fmt(plan.targetCwa)} CWA",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = cs.onSurface
+                    )
+                }
+                Icon(Icons.Outlined.Flag, contentDescription = "Change goal", tint = cs.onSurfaceVariant)
+            }
+
+            HorizontalDivider(color = MaterialTheme.lamla.colors.hairline)
+
+            // Verdict.
+            when (val o = plan.outcome) {
+                is GradeProjection.TargetOutcome.Reachable -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "${fmt(o.percentOnRemaining)}%",
+                                style = MaterialTheme.typography.displaySmall.copy(
+                                    brush = MaterialTheme.lamla.gradients.emberLinear,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                            Text(
+                                "on every mark still to come",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = cs.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 7.dp)
+                            )
+                        }
+                        Text(
+                            "Hold a ${fmt(plan.requiredSwa)} average across this semester's ${plan.lines.sumOf { it.credits }} credits.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = cs.onSurfaceVariant
+                        )
+                    }
+                }
+                is GradeProjection.TargetOutcome.Secured -> VerdictLine(
+                    title = "Secured.",
+                    body = "${plan.targetClass.label} is locked in — even a wipeout on what's left keeps you at ${fmt(o.floorCwa)}.",
+                    accent = cs.tertiary
+                )
+                is GradeProjection.TargetOutcome.OutOfReach -> VerdictLine(
+                    title = "Out of reach this term.",
+                    body = "Max everything left and you land ${fmt(o.bestCwa)} (${o.bestClass.label}). Bank it and revisit next semester.",
+                    accent = cs.error
+                )
+                GradeProjection.TargetOutcome.NoData -> Unit
+            }
+
+            // Per-course plan — the finish line each course lands on if you hold the effort.
+            val showLines = plan.outcome is GradeProjection.TargetOutcome.Reachable ||
+                plan.outcome is GradeProjection.TargetOutcome.OutOfReach
+            if (showLines && plan.lines.isNotEmpty()) {
+                HorizontalDivider(color = MaterialTheme.lamla.colors.hairline)
+                Text(
+                    if (plan.outcome is GradeProjection.TargetOutcome.OutOfReach) "BEST-CASE FINISH" else "FINISH LINE",
+                    style = LamlaTextStyles.SectionLabel,
+                    color = cs.onSurfaceVariant
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    plan.lines.forEach { TargetLineRow(it) }
+                }
+            }
+        }
     }
-    LamlaSurface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+}
+
+@Composable
+private fun VerdictLine(title: String, body: String, accent: Color) {
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(title, style = MaterialTheme.typography.titleMedium, color = accent)
+        Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+@Composable
+private fun TargetLineRow(line: GradeProjection.TargetLine) {
+    val cs = MaterialTheme.colorScheme
+    val accent = Color(line.colorArgb)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            line.code,
+            style = LamlaTextStyles.SectionLabel,
+            color = accent,
+            modifier = Modifier.width(60.dp)
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(
+                line.name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = cs.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                if (line.locked) "Locked · ${fmt(line.gradedWeight)}% graded"
+                else "${line.credits} cr · ${fmt(line.gradedWeight)}% graded so far",
+                style = MaterialTheme.typography.bodySmall,
+                color = cs.onSurfaceVariant
+            )
+        }
+        Text(
+            if (line.locked) fmt(line.pointsEarned) else fmt(line.projectedFinishMark),
+            style = LamlaTextStyles.Metric,
+            color = if (line.locked) cs.onSurfaceVariant else cs.onSurface
+        )
+    }
+}
+
+@Composable
+private fun GoalPickerDialog(
+    currentTarget: Float?,
+    isCustom: Boolean,
+    onSave: (Float?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val presets = listOf(
+        GradeProjection.DegreeClass.First,
+        GradeProjection.DegreeClass.SecondUpper,
+        GradeProjection.DegreeClass.SecondLower,
+        GradeProjection.DegreeClass.Third
+    )
+    // selected == null → auto (next class up). Otherwise a concrete target CWA.
+    var selected by remember { mutableStateOf(if (isCustom) currentTarget else null) }
+    var customText by remember {
+        mutableStateOf(
+            if (isCustom && currentTarget != null && presets.none { kotlin.math.abs(it.minCwa - currentTarget) < 0.5f })
+                fmt(currentTarget) else ""
+        )
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Set your goal") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(
+                    "Aim for a class of degree, or enter a custom CWA. Lamla works out exactly what you need on what's left.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    LamlaChip(
+                        label = "Auto",
+                        selected = selected == null && customText.isBlank(),
+                        onClick = { selected = null; customText = "" }
+                    )
+                    presets.forEach { dc ->
+                        LamlaChip(
+                            label = dc.label,
+                            selected = customText.isBlank() && selected?.let { kotlin.math.abs(it - dc.minCwa) < 0.5f } == true,
+                            onClick = { selected = dc.minCwa; customText = "" }
+                        )
+                    }
+                }
+                LamlaField("Custom CWA") {
+                    LamlaTextField(
+                        value = customText,
+                        onValueChange = { customText = it },
+                        placeholder = "e.g. 68",
+                        keyboardType = KeyboardType.Decimal
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val custom = customText.trim().toFloatOrNull()?.coerceIn(0f, 100f)
+                onSave(custom ?: selected)
+            }) { Text("Save") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
 }
 
 // --- Prior standing ---------------------------------------------------------
