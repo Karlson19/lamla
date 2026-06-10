@@ -39,8 +39,8 @@ android {
         applicationId = "app.lamla"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.3.1"
+        versionCode = 15
+        versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -136,7 +136,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.material3.adaptive)
-    implementation(libs.androidx.ui.text.google.fonts)
+    // Fonts ship bundled in res/font (deterministic, offline) - the downloadable
+    // google-fonts provider dependency is gone with them.
 
     implementation(libs.androidx.navigation.compose)
 

@@ -119,34 +119,57 @@ fun HomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            if (!notificationsAllowed) {
-                item {
-                    NotificationsOffBanner(onEnable = { context.openAppNotificationSettings() })
-                }
-            }
-
-            // Only nudge about exact alarms when notifications themselves are on -
-            // otherwise the notification banner is the more important fix to show first.
-            if (notificationsAllowed && !exactAlarmsAllowed) {
-                item {
-                    ExactAlarmsOffBanner(onEnable = { context.openExactAlarmSettings() })
-                }
-            }
-
-            // Only surface the battery nudge once notifications are on - otherwise the
-            // notifications banner is the more urgent fix and we avoid stacking three.
-            if (notificationsAllowed && batteryOptimized) {
-                item {
-                    BatteryOptimizationBanner(onEnable = { context.openBatteryOptimizationSettings() })
-                }
-            }
-
+            // The masthead leads, always - the first thing on screen is the
+            // greeting, never a system warning.
             item {
                 HomeHeader(
                     greeting = state.greeting,
                     userName = state.userName,
                     today = state.today
                 )
+            }
+
+            // System setup, consolidated: one quiet checklist card instead of up
+            // to three stacked warning banners. Notifications outrank the rest -
+            // until they're on, the finer-grained fixes are noise.
+            val setupSteps = buildList {
+                if (!notificationsAllowed) {
+                    add(
+                        SetupStep(
+                            icon = Icons.Outlined.NotificationsOff,
+                            title = "Turn on notifications",
+                            detail = "Reminders can't reach you without them.",
+                            action = "Turn on",
+                            onClick = { context.openAppNotificationSettings() }
+                        )
+                    )
+                } else {
+                    if (!exactAlarmsAllowed) {
+                        add(
+                            SetupStep(
+                                icon = Icons.Outlined.Alarm,
+                                title = "Allow exact alarms",
+                                detail = "So class and exam alerts fire on the minute.",
+                                action = "Allow",
+                                onClick = { context.openExactAlarmSettings() }
+                            )
+                        )
+                    }
+                    if (batteryOptimized) {
+                        add(
+                            SetupStep(
+                                icon = Icons.Outlined.BatteryAlert,
+                                title = "Drop battery limits",
+                                detail = "Stops the OS from delaying reminders.",
+                                action = "Fix",
+                                onClick = { context.openBatteryOptimizationSettings() }
+                            )
+                        )
+                    }
+                }
+            }
+            if (setupSteps.isNotEmpty()) {
+                item { SetupCard(steps = setupSteps) }
             }
 
             item {
@@ -302,102 +325,79 @@ private fun HomeHeader(
     }
 }
 
+/** One actionable system fix surfaced by the setup card. */
+private data class SetupStep(
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val title: String,
+    val detail: String,
+    val action: String,
+    val onClick: () -> Unit
+)
+
 /**
- * Shown only when the OS is blocking notifications. A warm, ember-lit card so it
- * reads as "act on this" without feeling like a hard error; tapping it opens the
- * system notification settings for the app.
+ * The consolidated "finish setup" card - every missing system permission as one
+ * compact, warmly-lit checklist instead of a stack of separate warning banners.
+ * It sits *below* the greeting: helpful concierge, not a doorman with demands.
  */
 @Composable
-private fun NotificationsOffBanner(onEnable: () -> Unit) {
+private fun SetupCard(steps: List<SetupStep>) {
     val ember = MaterialTheme.lamla.gradients.emberGlow
     val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerLg)
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .glow(ember, shape, radius = 14.dp, alpha = 0.32f)
+            .glow(ember, shape, radius = 14.dp, alpha = 0.28f)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
-            .border(1.dp, ember.copy(alpha = 0.5f), shape)
-            .clickable(onClick = onEnable)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .border(1.dp, ember.copy(alpha = 0.45f), shape)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Icon(
-            imageVector = Icons.Outlined.NotificationsOff,
-            contentDescription = "Notifications are disabled",
-            tint = ember,
-            modifier = Modifier.size(22.dp)
-        )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = "Notifications are off",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Reminders can't reach you until you turn them on.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
         Text(
-            text = "Turn on",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = ember
+            text = "FINISH SETUP",
+            style = LamlaTextStyles.SectionLabel,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 6.dp)
         )
-    }
-}
-
-@Composable
-private fun ExactAlarmsOffBanner(onEnable: () -> Unit) {
-    val ember = MaterialTheme.lamla.gradients.emberGlow
-    val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerLg)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .glow(ember, shape, radius = 14.dp, alpha = 0.32f)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
-            .border(1.dp, ember.copy(alpha = 0.5f), shape)
-            .clickable(onClick = onEnable)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Alarm,
-            contentDescription = "Exact alarms are disabled",
-            tint = ember,
-            modifier = Modifier.size(22.dp)
-        )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = "Reminders may arrive late",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Allow exact alarms so class and exam alerts fire on the minute.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        steps.forEachIndexed { index, step ->
+            if (index > 0) {
+                HorizontalDivider(color = MaterialTheme.lamla.colors.hairline)
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(MaterialTheme.lamla.spacing.cornerSm))
+                    .clickable(onClick = step.onClick)
+                    .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = step.icon,
+                    contentDescription = null,
+                    tint = ember,
+                    modifier = Modifier.size(20.dp)
+                )
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text(
+                        text = step.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = step.detail,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = step.action,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ember
+                )
+            }
         }
-        Text(
-            text = "Allow",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = ember
-        )
     }
 }
 
@@ -717,53 +717,6 @@ private fun QuickCaptureFab(
         contentDescription = "Quick capture",
         size = 56.dp
     )
-}
-
-@Composable
-private fun BatteryOptimizationBanner(onEnable: () -> Unit) {
-    val ember = MaterialTheme.lamla.gradients.emberGlow
-    val shape = RoundedCornerShape(MaterialTheme.lamla.spacing.cornerLg)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .glow(ember, shape, radius = 14.dp, alpha = 0.32f)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
-            .border(1.dp, ember.copy(alpha = 0.5f), shape)
-            .clickable(onClick = onEnable)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.BatteryAlert,
-            contentDescription = "Battery optimization is on",
-            tint = ember,
-            modifier = Modifier.size(22.dp)
-        )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = "Battery optimization active",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Reminders might be delayed by the OS. Disable optimization for reliable alerts.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = "Fix",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = ember
-        )
-    }
 }
 
 private fun formatTime(minutes: Int): String {
