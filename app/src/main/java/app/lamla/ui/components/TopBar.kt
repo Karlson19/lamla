@@ -1,8 +1,11 @@
 package app.lamla.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -19,10 +22,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.lamla.ui.theme.lamla
 
@@ -76,23 +83,38 @@ fun LamlaTopBar(
 }
 
 /**
- * A 40dp hairline-bordered circular icon button - the chrome language shared by
- * the floating hamburger, the top-bar back button, and top-bar actions.
+ * A hairline-bordered circular icon button - the chrome language shared by the
+ * floating hamburger, the top-bar back button, and top-bar actions.
+ *
+ * Press feedback is the house style: spring scale, no ripple.
  */
 @Composable
 fun CircleIconButton(
     icon: @Composable () -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: Dp = 40.dp
 ) {
     val cs = MaterialTheme.colorScheme
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.92f else 1f,
+        animationSpec = MaterialTheme.lamla.motion.springSnap,
+        label = "circle-btn-scale"
+    )
     Box(
         modifier = modifier
-            .size(40.dp)
+            .size(size)
+            .scale(scale)
             .clip(CircleShape)
             .background(cs.surfaceContainerLow.copy(alpha = 0.92f), CircleShape)
             .border(1.dp, MaterialTheme.lamla.colors.hairline, CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
         icon()

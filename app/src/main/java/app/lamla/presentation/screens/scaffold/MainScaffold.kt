@@ -50,6 +50,7 @@ import app.lamla.presentation.screens.home.HomeScreen
 import app.lamla.presentation.screens.settings.SettingsScreen
 import app.lamla.presentation.screens.study.StudyHubScreen
 import app.lamla.presentation.screens.timetable.TimetableScreen
+import app.lamla.ui.components.CircleIconButton
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.lamla
 import app.lamla.ui.theme.softElevation
@@ -407,22 +408,17 @@ private fun FloatingMenuButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val cs = MaterialTheme.colorScheme
-    Box(
-        modifier = modifier
-            .size(44.dp)
-            .softElevation(CircleShape, radius = 12.dp)
-            .clip(CircleShape)
-            .background(cs.surfaceContainerLow.copy(alpha = 0.92f), CircleShape)
-            .border(1.dp, MaterialTheme.lamla.colors.hairline, CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Menu,
-            contentDescription = "Open navigation menu",
-            tint = cs.onSurface,
-            modifier = Modifier.size(22.dp)
-        )
-    }
+    CircleIconButton(
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Menu,
+                contentDescription = "Open navigation menu",
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(22.dp)
+            )
+        },
+        onClick = onClick,
+        size = 44.dp,
+        modifier = modifier.softElevation(CircleShape, radius = 12.dp)
+    )
 }

@@ -44,7 +44,7 @@ fun CoursesScreen(
             contentPadding = PaddingValues(
                 start = MaterialTheme.lamla.spacing.gutter,
                 end = MaterialTheme.lamla.spacing.gutter,
-                top = tabTopInset(),
+                top = tabTopInset(16.dp),
                 bottom = tabBottomInset()
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -99,13 +99,11 @@ fun CoursesScreen(
                 }
             }
         }
-        SmallFloatingActionButton(
+        LamlaFab(
             onClick = onAddCourse,
-            containerColor = MaterialTheme.colorScheme.onSurface,
-            contentColor = MaterialTheme.colorScheme.surface,
-            shape = CircleShape,
+            contentDescription = "Add course",
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = MaterialTheme.lamla.spacing.gutter, bottom = tabBottomInset())
-        ) { Icon(Icons.Outlined.Add, contentDescription = "Add course") }
+        )
     }
 }
 

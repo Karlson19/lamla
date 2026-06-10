@@ -35,9 +35,19 @@ import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlin.math.roundToInt
 
-private val PresentColor = Color(0xFF1B9E5A)
-private val LateColor = Color(0xFFE08A00)
-private val AbsentColor = Color(0xFFD2493F)
+/**
+ * Theme-aware verdict colors, riding the stress tokens: sage = showed up,
+ * amber = late, rust = missed. They flip to their dark-mode variants with the
+ * theme and collapse correctly under the Monochrome accent — hard-coded hex
+ * here would glow wrong on an obsidian surface.
+ */
+private data class VerdictColors(val present: Color, val late: Color, val absent: Color)
+
+@Composable
+private fun verdictColors(): VerdictColors {
+    val c = MaterialTheme.lamla.colors
+    return VerdictColors(present = c.stressChill, late = c.stressSteady, absent = c.stressCrunch)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -172,11 +182,12 @@ fun AttendanceScreen(
 @Composable
 private fun OverallHero(state: AttendanceUiState) {
     val cs = MaterialTheme.colorScheme
+    val verdict = verdictColors()
     val rate = state.overallRate
     val good = rate == null || rate >= state.target
     LamlaSurface(
         modifier = Modifier.fillMaxWidth(),
-        glowColor = if (good) MaterialTheme.lamla.gradients.emberGlow else AbsentColor.copy(alpha = 0.5f),
+        glowColor = if (good) MaterialTheme.lamla.gradients.emberGlow else verdict.absent.copy(alpha = 0.5f),
         contentPadding = MaterialTheme.lamla.spacing.lg
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -196,7 +207,7 @@ private fun OverallHero(state: AttendanceUiState) {
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
             }
-            RateBar(fraction = rate ?: 0f, color = if (good) PresentColor else AbsentColor, target = state.target)
+            RateBar(fraction = rate ?: 0f, color = if (good) verdict.present else verdict.absent, target = state.target)
             if (state.pinnedVenueCount > 0) {
                 Text(
                     "${state.pinnedVenueCount} venue${if (state.pinnedVenueCount == 1) "" else "s"} pinned for auto check-in.",
@@ -233,14 +244,15 @@ private fun TodayClassCard(
                     )
                 }
             }
+            val verdict = verdictColors()
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusPill("Present", PresentColor, todayClass.status == AttendanceStatus.Present) {
+                StatusPill("Present", verdict.present, todayClass.status == AttendanceStatus.Present) {
                     if (todayClass.status == AttendanceStatus.Present) onClear() else onMark(AttendanceStatus.Present)
                 }
-                StatusPill("Late", LateColor, todayClass.status == AttendanceStatus.Late) {
+                StatusPill("Late", verdict.late, todayClass.status == AttendanceStatus.Late) {
                     if (todayClass.status == AttendanceStatus.Late) onClear() else onMark(AttendanceStatus.Late)
                 }
-                StatusPill("Absent", AbsentColor, todayClass.status == AttendanceStatus.Absent) {
+                StatusPill("Absent", verdict.absent, todayClass.status == AttendanceStatus.Absent) {
                     if (todayClass.status == AttendanceStatus.Absent) onClear() else onMark(AttendanceStatus.Absent)
                 }
             }
@@ -269,6 +281,7 @@ private fun StatusPill(label: String, color: Color, selected: Boolean, onClick: 
 @Composable
 private fun CourseAttendanceCard(ca: CourseAttendance, target: Float, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
+    val verdict = verdictColors()
     val accent = Color(ca.course.colorArgb)
     val rate = ca.rate
     val good = rate == null || rate >= target
@@ -282,10 +295,10 @@ private fun CourseAttendanceCard(ca: CourseAttendance, target: Float, modifier: 
                 Text(
                     pct(rate),
                     style = MaterialTheme.typography.headlineSmall,
-                    color = if (good) cs.onSurface else AbsentColor
+                    color = if (good) cs.onSurface else verdict.absent
                 )
             }
-            RateBar(fraction = rate ?: 0f, color = if (good) PresentColor else AbsentColor, target = target)
+            RateBar(fraction = rate ?: 0f, color = if (good) verdict.present else verdict.absent, target = target)
             Text(
                 buildString {
                     append("${ca.present} present")
@@ -299,7 +312,7 @@ private fun CourseAttendanceCard(ca: CourseAttendance, target: Float, modifier: 
             Text(
                 skipVerdict(ca, target),
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (ca.targetUnreachable(target)) AbsentColor else cs.onSurface
+                color = if (ca.targetUnreachable(target)) verdict.absent else cs.onSurface
             )
         }
     }
@@ -360,7 +373,7 @@ private fun AutoMarkCard(
                     Text(
                         "Ready. Pin the venues below to arm them.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PresentColor
+                        color = verdictColors().present
                     )
                 }
             }
@@ -391,7 +404,7 @@ private fun VenueCard(
             Icon(
                 if (row.pinned) Icons.Outlined.LocationOn else Icons.Outlined.MyLocation,
                 contentDescription = null,
-                tint = if (row.pinned) PresentColor else cs.onSurfaceVariant,
+                tint = if (row.pinned) verdictColors().present else cs.onSurfaceVariant,
                 modifier = Modifier.size(22.dp)
             )
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

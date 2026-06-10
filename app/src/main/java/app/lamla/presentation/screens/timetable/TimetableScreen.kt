@@ -114,26 +114,14 @@ fun TimetableScreen(
             }
         }
 
-        // Add button: ember fill + warm halo, matching Home's capture action.
-        val gradients = MaterialTheme.lamla.gradients
-        Box(
+        // Add button: the shared ember gesture, matching Home's capture action.
+        LamlaFab(
+            onClick = onAddClass,
+            contentDescription = "Add class",
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = MaterialTheme.lamla.spacing.gutter, bottom = tabBottomInset())
-                .size(48.dp)
-                .glow(gradients.emberGlow, androidx.compose.foundation.shape.CircleShape, radius = 15.dp, alpha = 0.5f)
-                .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(gradients.emberLinear, androidx.compose.foundation.shape.CircleShape)
-                .clickable(onClick = onAddClass),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Outlined.Add,
-                contentDescription = "Add class",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+        )
     }
 }
 

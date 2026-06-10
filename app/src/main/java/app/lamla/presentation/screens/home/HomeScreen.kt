@@ -709,25 +709,14 @@ private fun QuickCaptureFab(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val gradients = MaterialTheme.lamla.gradients
-    Box(
-        modifier = modifier
-            .size(56.dp)
-            // Ember fill + matching halo: the capture button is the one warm, lit
-            // call to action floating over the page.
-            .glow(gradients.emberGlow, CircleShape, radius = 16.dp, alpha = 0.5f)
-            .clip(CircleShape)
-            .background(gradients.emberLinear, CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = "Quick capture",
-            tint = Color.White,
-            modifier = Modifier.size(22.dp)
-        )
-    }
+    // The one warm, lit call to action floating over the page - the shared
+    // ember gesture, at its largest here because capture is Home's primary verb.
+    LamlaFab(
+        onClick = onClick,
+        modifier = modifier,
+        contentDescription = "Quick capture",
+        size = 56.dp
+    )
 }
 
 @Composable

@@ -57,12 +57,7 @@ fun LecturersScreen(
             LamlaTopBar(title = "Lecturers", onBack = onBack)
         },
         floatingActionButton = {
-            SmallFloatingActionButton(
-                onClick = onAdd,
-                containerColor = MaterialTheme.colorScheme.onSurface,
-                contentColor = MaterialTheme.colorScheme.surface,
-                shape = CircleShape
-            ) { Icon(Icons.Outlined.Add, contentDescription = "Add lecturer") }
+            LamlaFab(onClick = onAdd, contentDescription = "Add lecturer")
         }
     ) { padding ->
         if (state.lecturers.isEmpty()) {

@@ -51,12 +51,7 @@ fun DeadlinesScreen(
             LamlaTopBar(title = "Deadlines", onBack = onBack)
         },
         floatingActionButton = {
-            SmallFloatingActionButton(
-                onClick = onAdd,
-                containerColor = MaterialTheme.colorScheme.onSurface,
-                contentColor = MaterialTheme.colorScheme.surface,
-                shape = CircleShape
-            ) { Icon(Icons.Outlined.Add, contentDescription = "Add deadline") }
+            LamlaFab(onClick = onAdd, contentDescription = "Add deadline")
         }
     ) { padding ->
         if (state.deadlines.isEmpty()) {

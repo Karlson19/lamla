@@ -59,12 +59,7 @@ fun ExamModeScreen(
             )
         },
         floatingActionButton = {
-            SmallFloatingActionButton(
-                onClick = onAddExam,
-                containerColor = MaterialTheme.colorScheme.onSurface,
-                contentColor = MaterialTheme.colorScheme.surface,
-                shape = CircleShape
-            ) { Icon(Icons.Outlined.Add, contentDescription = "Add exam") }
+            LamlaFab(onClick = onAddExam, contentDescription = "Add exam")
         }
     ) { padding ->
         if (state.exams.isEmpty()) {
