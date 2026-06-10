@@ -47,27 +47,16 @@ fun PersonalEventEditScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (eventId == null) "New event" else "Edit event",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Close, contentDescription = null)
-                    }
-                },
+            LamlaTopBar(
+                title = if (eventId == null) "New event" else "Edit event",
+                onBack = onBack,
+                navIcon = Icons.Outlined.Close,
                 actions = {
                     TextButton(
                         onClick = { scope.launch { if (viewModel.save()) onBack() } },
                         enabled = state.canSave
                     ) { Text("Save") }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
     ) { padding ->

@@ -63,13 +63,10 @@ fun ClassEditScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(if (classId == null) "New class" else "Edit class", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Cancel")
-                    }
-                },
+            LamlaTopBar(
+                title = if (classId == null) "New class" else "Edit class",
+                onBack = onBack,
+                navIcon = Icons.Outlined.Close,
                 actions = {
                     TextButton(
                         onClick = {
@@ -79,10 +76,7 @@ fun ClassEditScreen(
                         },
                         enabled = state.canSave
                     ) { Text("Save") }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
     ) { padding ->

@@ -60,11 +60,7 @@ fun PomodoroScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(state.phaseLabel, style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
-            )
+            LamlaTopBar(title = state.phaseLabel, onBack = onBack)
         }
     ) { padding ->
         Column(

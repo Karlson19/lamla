@@ -29,6 +29,7 @@ import app.lamla.domain.model.CaptureType
 import app.lamla.ui.components.EmptyState
 import app.lamla.ui.components.LamlaReveal
 import app.lamla.ui.components.LamlaSurface
+import app.lamla.ui.components.LamlaTopBar
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
@@ -53,11 +54,7 @@ fun CaptureGalleryScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Captures", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
-            )
+            LamlaTopBar(title = "Captures", onBack = onBack)
         }
     ) { padding ->
         if (state.captures.isEmpty()) {

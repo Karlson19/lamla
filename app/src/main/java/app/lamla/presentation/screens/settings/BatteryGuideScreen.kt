@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import app.lamla.notifications.OemBatteryGuide
 import app.lamla.ui.components.LamlaButton
 import app.lamla.ui.components.LamlaSurface
+import app.lamla.ui.components.LamlaTopBar
 import app.lamla.ui.theme.LamlaTextStyles
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
@@ -35,11 +36,7 @@ fun BatteryGuideScreen(onBack: () -> Unit) {
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Battery optimization", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
-            )
+            LamlaTopBar(title = "Battery optimization", onBack = onBack)
         }
     ) { padding ->
         Column(

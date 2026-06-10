@@ -70,15 +70,7 @@ fun AttendanceScreen(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Attendance", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
-            )
+            LamlaTopBar(title = "Attendance", onBack = onBack)
         }
     ) { padding ->
         LazyColumn(

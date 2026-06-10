@@ -61,7 +61,8 @@ fun EmptyState(
         }
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            // Serif: even the quiet moments speak in the editorial voice.
+            style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )

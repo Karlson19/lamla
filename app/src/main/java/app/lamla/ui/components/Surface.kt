@@ -72,6 +72,12 @@ fun LamlaSurface(
         label = "surface-bg"
     )
 
+    // Lifted surfaces get a faint top sheen - light falling on the card from the
+    // same "lit from above" world as the aurora backdrop. Imperceptible alone,
+    // but it's what makes hero cards read as glass instead of flat fill.
+    val sheen = MaterialTheme.lamla.gradients.sheen
+    val lifted = glowColor != null || elevated
+
     val base = modifier
         .scale(scale)
         .then(
@@ -83,6 +89,15 @@ fun LamlaSurface(
         )
         .clip(shape)
         .background(bg, shape)
+        .then(
+            if (lifted) Modifier.background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    0f to sheen.first().copy(alpha = sheen.first().alpha * 0.5f),
+                    0.4f to sheen.last()
+                ),
+                shape
+            ) else Modifier
+        )
         .border(BorderStroke(borderWidth, borderColor), shape)
 
     val withClick = if (onClick != null) {

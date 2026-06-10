@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.lamla.notifications.NotificationChannels
 import app.lamla.ui.components.LamlaReveal
 import app.lamla.ui.components.LamlaSurface
+import app.lamla.ui.components.LamlaTopBar
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 
@@ -46,11 +47,7 @@ fun NotificationSettingsScreen(onBack: () -> Unit) {
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Notification sounds", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
-            )
+            LamlaTopBar(title = "Notification sounds", onBack = onBack)
         }
     ) { padding ->
         LazyColumn(

@@ -290,6 +290,15 @@ private fun HomeHeader(
             text = headline,
             style = MaterialTheme.typography.displaySmall
         )
+        // The masthead rule: a short ember stroke under the serif greeting -
+        // the same signature gesture as a magazine's folio line.
+        Box(
+            modifier = Modifier
+                .padding(top = 6.dp)
+                .size(width = 44.dp, height = 3.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.lamla.gradients.emberHorizontal())
+        )
     }
 }
 

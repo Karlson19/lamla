@@ -50,13 +50,12 @@ fun ExamModeScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Exam mode", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
+            LamlaTopBar(
+                title = "Exam mode",
+                onBack = onBack,
                 actions = {
                     Switch(checked = state.examModeOn, onCheckedChange = { viewModel.toggleExamMode(it) })
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+                }
             )
         },
         floatingActionButton = {
@@ -156,13 +155,13 @@ fun ExamEditScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(if (examId == null) "New exam" else "Edit exam", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Outlined.Close, contentDescription = null) } },
+            LamlaTopBar(
+                title = if (examId == null) "New exam" else "Edit exam",
+                onBack = onBack,
+                navIcon = Icons.Outlined.Close,
                 actions = {
                     TextButton(onClick = { scope.launch { if (viewModel.save()) onBack() } }, enabled = state.canSave) { Text("Save") }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+                }
             )
         }
     ) { padding ->

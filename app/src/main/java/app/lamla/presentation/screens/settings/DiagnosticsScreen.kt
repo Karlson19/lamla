@@ -21,6 +21,7 @@ import app.lamla.domain.usecase.UpcomingAlarms
 import app.lamla.presentation.openExactAlarmSettings
 import app.lamla.ui.components.LamlaButton
 import app.lamla.ui.components.LamlaReveal
+import app.lamla.ui.components.LamlaTopBar
 import app.lamla.ui.components.LamlaSurface
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.LamlaTextStyles
@@ -58,17 +59,7 @@ fun DiagnosticsScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Diagnostics", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
+            LamlaTopBar(title = "Diagnostics", onBack = onBack)
         }
     ) { padding ->
         LazyColumn(

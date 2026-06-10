@@ -18,9 +18,16 @@ import app.lamla.R
 /**
  * Typography.
  *
- * Inter for everything (UI), JetBrains Mono for the Pomodoro timer face only
- * (because monospace digits don't shimmy as the seconds tick). Both via the
- * downloadable-fonts provider - no font files bundled, no APK bloat.
+ * Two voices, deliberately paired (the editorial convention):
+ *   - **Fraunces** (a warm old-style serif) owns the display + headline slots -
+ *     the greeting, screen mastheads, hero numbers. It's what makes Lamla read
+ *     like a well-set magazine instead of another sans-serif utility app.
+ *   - **Inter** stays on title/body/label - the workhorse UI voice. Crisp at
+ *     small sizes, never competes with the serif above it.
+ *   - **JetBrains Mono** remains the Pomodoro timer face only (monospace digits
+ *     don't shimmy as the seconds tick).
+ *
+ * All via the downloadable-fonts provider - no font files bundled, no APK bloat.
  *
  * The type scale is restrained: 4 display sizes, 3 body sizes. Tracking widens
  * at small sizes (UI labels) and tightens at display sizes. Line-height-style
@@ -45,6 +52,15 @@ private val Inter = FontFamily(
     Font(googleFont = GoogleFont("Inter"), fontProvider = provider, weight = FontWeight.Bold)
 )
 
+/** The editorial serif. Falls back to the platform serif while downloading. */
+private val Fraunces = FontFamily(
+    Font(googleFont = GoogleFont("Fraunces"), fontProvider = provider, weight = FontWeight.Light),
+    Font(googleFont = GoogleFont("Fraunces"), fontProvider = provider, weight = FontWeight.Normal),
+    Font(googleFont = GoogleFont("Fraunces"), fontProvider = provider, weight = FontWeight.Medium),
+    Font(googleFont = GoogleFont("Fraunces"), fontProvider = provider, weight = FontWeight.SemiBold),
+    Font(googleFont = GoogleFont("Fraunces"), fontProvider = provider, weight = FontWeight.Bold)
+)
+
 private val Mono = FontFamily(
     Font(googleFont = GoogleFont("JetBrains Mono"), fontProvider = provider, weight = FontWeight.Light),
     Font(googleFont = GoogleFont("JetBrains Mono"), fontProvider = provider, weight = FontWeight.Normal),
@@ -52,6 +68,7 @@ private val Mono = FontFamily(
 )
 
 val MonoFamily: FontFamily get() = Mono
+val SerifFamily: FontFamily get() = Fraunces
 
 private val centeredAndTrimmed = LineHeightStyle(
     alignment = Alignment.Center,
@@ -63,59 +80,60 @@ private const val TabularNums = "\"tnum\" 1, \"lnum\" 1"
 private const val CaseSensitive = "\"case\" 1, \"tnum\" 1"
 
 internal val LamlaTypography = Typography(
-    // Display - used sparingly (stress score number, countdown).
-    // Light weight at large sizes feels editorial. Tight tracking.
+    // Display - used sparingly (greeting, stress score, hero CWA). The serif at
+    // a calm Regular weight is the signature: editorial, classic, unmistakably ours.
     displayLarge = TextStyle(
-        fontFamily = Inter,
-        fontWeight = FontWeight.Light,
-        fontSize = 56.sp,
-        lineHeight = 60.sp,
-        letterSpacing = (-0.02).em,
-        lineHeightStyle = centeredAndTrimmed,
-        fontFeatureSettings = TabularNums
-    ),
-    displayMedium = TextStyle(
-        fontFamily = Inter,
-        fontWeight = FontWeight.Light,
-        fontSize = 44.sp,
-        lineHeight = 48.sp,
-        letterSpacing = (-0.018).em,
-        lineHeightStyle = centeredAndTrimmed,
-        fontFeatureSettings = TabularNums
-    ),
-    displaySmall = TextStyle(
-        fontFamily = Inter,
-        fontWeight = FontWeight.Light,
-        fontSize = 34.sp,
-        lineHeight = 40.sp,
+        fontFamily = Fraunces,
+        fontWeight = FontWeight.Normal,
+        fontSize = 54.sp,
+        lineHeight = 58.sp,
         letterSpacing = (-0.015).em,
         lineHeightStyle = centeredAndTrimmed,
         fontFeatureSettings = TabularNums
     ),
+    displayMedium = TextStyle(
+        fontFamily = Fraunces,
+        fontWeight = FontWeight.Normal,
+        fontSize = 42.sp,
+        lineHeight = 46.sp,
+        letterSpacing = (-0.012).em,
+        lineHeightStyle = centeredAndTrimmed,
+        fontFeatureSettings = TabularNums
+    ),
+    displaySmall = TextStyle(
+        fontFamily = Fraunces,
+        fontWeight = FontWeight.Medium,
+        fontSize = 32.sp,
+        lineHeight = 38.sp,
+        letterSpacing = (-0.01).em,
+        lineHeightStyle = centeredAndTrimmed,
+        fontFeatureSettings = TabularNums
+    ),
 
-    // Headline - section headers.
+    // Headline - screen mastheads and section headers. Serif SemiBold: enough
+    // ink to anchor a page without shouting.
     headlineLarge = TextStyle(
-        fontFamily = Inter,
+        fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 34.sp,
-        letterSpacing = (-0.012).em,
+        letterSpacing = (-0.008).em,
         lineHeightStyle = centeredAndTrimmed
     ),
     headlineMedium = TextStyle(
-        fontFamily = Inter,
+        fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
         fontSize = 22.sp,
         lineHeight = 28.sp,
-        letterSpacing = (-0.01).em,
+        letterSpacing = (-0.006).em,
         lineHeightStyle = centeredAndTrimmed
     ),
     headlineSmall = TextStyle(
-        fontFamily = Inter,
+        fontFamily = Fraunces,
         fontWeight = FontWeight.SemiBold,
         fontSize = 19.sp,
         lineHeight = 24.sp,
-        letterSpacing = (-0.005).em,
+        letterSpacing = (-0.003).em,
         lineHeightStyle = centeredAndTrimmed
     ),
 

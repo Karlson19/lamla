@@ -42,15 +42,15 @@ fun CourseEditScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(if (courseId == null) "New course" else "Edit course", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Outlined.Close, contentDescription = null) } },
+            LamlaTopBar(
+                title = if (courseId == null) "New course" else "Edit course",
+                onBack = onBack,
+                navIcon = Icons.Outlined.Close,
                 actions = {
                     TextButton(onClick = { scope.launch { if (viewModel.save()) onBack() } }, enabled = state.canSave) {
                         Text("Save")
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+                }
             )
         }
     ) { padding ->

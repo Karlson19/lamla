@@ -42,15 +42,15 @@ fun DeadlineEditScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(if (deadlineId == null) "New deadline" else "Edit deadline", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Outlined.Close, contentDescription = null) } },
+            LamlaTopBar(
+                title = if (deadlineId == null) "New deadline" else "Edit deadline",
+                onBack = onBack,
+                navIcon = Icons.Outlined.Close,
                 actions = {
                     TextButton(onClick = { scope.launch { if (viewModel.save()) onBack() } }, enabled = state.canSave) {
                         Text("Save")
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+                }
             )
         }
     ) { padding ->

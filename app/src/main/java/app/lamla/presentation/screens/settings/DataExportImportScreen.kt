@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.lamla.ui.components.LamlaButton
 import app.lamla.ui.components.LamlaSecondaryButton
+import app.lamla.ui.components.LamlaTopBar
 import app.lamla.ui.theme.auroraBackdrop
 import app.lamla.ui.theme.lamla
 import kotlinx.coroutines.launch
@@ -57,11 +58,7 @@ fun DataExportImportScreen(
         modifier = Modifier.fillMaxSize().auroraBackdrop(),
         containerColor = Color.Transparent,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Export & Import", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
-            )
+            LamlaTopBar(title = "Export & Import", onBack = onBack)
         }
     ) { padding ->
         Column(

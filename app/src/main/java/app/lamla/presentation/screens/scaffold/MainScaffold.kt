@@ -52,6 +52,7 @@ import app.lamla.presentation.screens.study.StudyHubScreen
 import app.lamla.presentation.screens.timetable.TimetableScreen
 import app.lamla.ui.components.SectionLabel
 import app.lamla.ui.theme.lamla
+import app.lamla.ui.theme.softElevation
 import kotlinx.coroutines.launch
 
 /**
@@ -222,8 +223,11 @@ private fun FloatingBottomNav(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            // Frosted float: a soft lift + slight translucency so the page's aurora
+            // and content glow through the bar instead of hard-stopping under it.
+            .softElevation(shape, radius = 18.dp)
             .clip(shape)
-            .background(cs.surfaceContainerLow, shape)
+            .background(cs.surfaceContainerLow.copy(alpha = 0.92f), shape)
             .border(1.dp, MaterialTheme.lamla.colors.hairline, shape)
             .padding(horizontal = 6.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -407,8 +411,9 @@ private fun FloatingMenuButton(
     Box(
         modifier = modifier
             .size(44.dp)
+            .softElevation(CircleShape, radius = 12.dp)
             .clip(CircleShape)
-            .background(cs.surfaceContainerLow, CircleShape)
+            .background(cs.surfaceContainerLow.copy(alpha = 0.92f), CircleShape)
             .border(1.dp, MaterialTheme.lamla.colors.hairline, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
